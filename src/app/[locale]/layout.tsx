@@ -8,7 +8,7 @@ import {CommonProvider} from '~/context/common-context';
 import {NextAuthProvider} from '~/context/next-auth-context';
 import {GoogleAnalytics} from '@next/third-parties/google'
 import {getAuthText, getCommonText, getMenuText} from "~/configs/languageText";
-
+import CookieConsent from "../../components/analytics/CookieConsent"
 const inter = Inter({subsets: ['latin']});
 
 type Props = {
@@ -58,6 +58,7 @@ export default async function LocaleLayout({
         {children}
       </CommonProvider>
     </NextAuthProvider>
+    <CookieConsent />
     </body>
     </html>
   );
