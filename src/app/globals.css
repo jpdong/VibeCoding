@@ -1,0 +1,165 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.div-markdown-color {
+    color: #1f1f1f;
+}
+
+.div-markdown-color h1,
+.div-markdown-color h2,
+.div-markdown-color h3,
+.div-markdown-color h4,
+.div-markdown-color h5,
+.div-markdown-color h6 {
+    @apply text-black;
+}
+
+.div-markdown-color a {
+    @apply text-blue-500;
+}
+
+.div-markdown-color strong {
+    @apply text-black;
+}
+
+.custom-textarea:focus {
+    border: none !important;
+    outline: none !important;
+}
+
+.background-div {
+    background-color: #f8f9fb;
+}
+
+/* 定义一个棋盘格背景的样式 */
+.checkerboard {
+    /* 创建两个线性渐变，45度角，模拟棋盘格效果 */
+    background-image: linear-gradient(45deg, #f0f0f0 25%, transparent 25%, transparent 75%, #f0f0f0 75%, #f0f0f0),
+    linear-gradient(45deg, #f0f0f0 25%, #ffffff 25%, #ffffff 75%, #f0f0f0 75%, #f0f0f0);
+    /* 定义每个方格的大小为20px */
+    background-size: 20px 20px;
+    /* 偏移其中一个渐变，以产生交错效果 */
+    background-position: 0 0, 10px 10px;
+}
+
+
+.main-color-0 {
+    color: #ffa11b;
+}
+
+.main-color-1 {
+    color: #cb9c60;
+}
+
+.main-color-0-bg {
+    background-color: #ffa11b;
+}
+
+.main-color-1-bg {
+    background-color: #cb9c60;
+}
+
+.loading-color {
+    color: #cb9c60;
+}
+
+.text-main-color-0 {
+    color: #47494b;
+}
+
+.text-main-color-1 {
+    color: #cb9c60;
+}
+
+.text-main-color-2 {
+    color: #7c7f81;
+}
+
+.test-color {
+    background-color: #f5d3c6;
+}
+
+.text-available {
+    color: #cb9c60;
+}
+
+.switch-button {
+    background-color: #cb9c60;
+}
+
+.button-text {
+    color: white;
+}
+
+.button-bg {
+    background-color: #ffa11b;
+}
+
+.button-bg:hover {
+    background-color: #f79100;
+}
+
+.button-bg-1 {
+    background-color: #cb9c60;
+}
+
+.button-bg-1:hover {
+    background-color: #cb9c60;
+}
+
+.link-text {
+    color: #ffa11b;
+}
+
+.link-text:hover {
+    color: #3662e3;
+}
+
+.header-link {
+    color: #000000;
+}
+
+.header-link:hover {
+    color: #cb9c60;
+}
+
+.header-choose-color {
+    color: #cb9c60;
+}
+
+.footer-leading-text {
+    color: #000000;
+}
+
+.footer-link {
+    color: #6b6e72;
+}
+
+.footer-link:hover {
+    color: #2655de;
+}
+
+.footer-desc-text {
+    color: #6b6e72;
+}
+
+.tags-choose-color {
+    background-color: #cb9c60;
+}
+
+.tags-color {
+    background-color: gray;
+}
+
+.out-link-color {
+    color: #6e6d6d;
+}
+
+.table-content-check-bg{
+    background-color: #ffa11b;
+}
+
+.table-content-check-bg:hover{
+    background-color: #ffa11b;
+}

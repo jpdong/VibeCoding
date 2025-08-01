@@ -1,0 +1,85 @@
+{
+  "FileDesc": {
+    "lang": "en",
+    "language": "简体中文",
+    "languageInChineseSimple": "简体中文"
+  },
+  "AuthText": {
+    "loginText": "登录",
+    "loginModalDesc": "请继续登录",
+    "loginModalButtonText": "使用 Google 登录",
+    "logoutModalDesc": "您确定要登出吗？",
+    "confirmButtonText": "确认",
+    "cancelButtonText": "取消",
+    "toastConfirmText": "好的"
+  },
+  "CommonText": {
+    "loadingText": "加载中...",
+    "placeholderText": "输入或粘贴文本",
+    "buttonText": "生成",
+    "contactTipBegin": "如需咨询或帮助，请通过 ",
+    "contactTipEnd": " 联系我们"
+  },
+  "CommonTextAddition": {
+    "footerDescText": "免费访问 ChatGPT，问任何你想问的问题！",
+    "exploreMore": "更多问答",
+    "createTextBegin": "由 %username% 与 ",
+    "createTextEnd": " 创建",
+    "getAnswerText": "获取答案",
+    "answerText": "答案",
+    "chatQuestionText": "问题：",
+    "chatAnswerText": "回答：",
+    "inputTipText": "暂不支持上下文，请在一个问题里表述清楚",
+    "inputTipText2": "问答将会公开显示，并被搜索引擎抓取"
+  },
+  "MenuText": {
+    "header0": "问题广场",
+    "header1": "我的提问",
+    "footerLegal": "法律条款",
+    "footerLegal0": "隐私政策",
+    "footerLegal1": "服务条款"
+  },
+  "PrivacyPolicyText": {
+    "title": "隐私政策",
+    "description": "",
+    "h1Text": "隐私政策",
+    "detailText": ""
+  },
+  "TermsOfServiceText": {
+    "title": "服务条款",
+    "description": "",
+    "h1Text": "服务条款",
+    "detailText": ""
+  },
+  "IndexPageText": {
+    "title": "ChatLLM",
+    "description": "",
+    "h1Text": "ChatLLM",
+    "h2Text": "",
+    "h2TextBegin": "在 ",
+    "h2TextMiddle": " 免费向 ",
+    "h2TextEnd": " 问任何问题并得到答案",
+    "h2TextOrder": "1"
+  },
+  "DiscoverPageText": {
+    "title": "",
+    "description": "",
+    "h1Text": "",
+    "h2Text": "",
+    "pageText": "第 %pageNumber% 页"
+  },
+  "MyPageText": {
+    "title": "我的提问",
+    "description": "",
+    "h1Text": "我的提问",
+    "askNew": "去提问"
+  },
+  "ChatPageText": {
+    "description": "由 ChatLLM 生成的回答：",
+    "chatWithText": "由 ChatLLM 使用 GPT 回答",
+    "chatWithBegin": "由 ",
+    "chatWithMiddle": " 使用 ",
+    "chatWithEnd": " 回答",
+    "chatWithOrder": "1"
+  }
+}
