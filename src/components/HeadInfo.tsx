@@ -1,5 +1,5 @@
 import {getLanguageByLang, langCode, languages, languagesEn} from "~/config";
-import {Fragment, useState} from "react";
+import {Fragment} from "react";
 
 const HeadInfo = ({
                     locale,
@@ -11,9 +11,7 @@ const HeadInfo = ({
                     chatDetail = {language: ""}
                   }) => {
 
-  const [languageListResult] = useState(
-    process.env.NEXT_PUBLIC_SHOW_LANGUAGE != '0' ? languageList : languagesEn
-  );
+  const languageListResult = process.env.NEXT_PUBLIC_SHOW_LANGUAGE != '0' ? languageList : languagesEn;
 
   return (
     <>

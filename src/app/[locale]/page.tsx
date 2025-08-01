@@ -3,6 +3,7 @@ import {unstable_setRequestLocale} from 'next-intl/server';
 
 import {
   getIndexPageText,
+  getCommonText,
 } from "~/configs/languageText";
 
 import {getLatestChatResultList} from "~/servers/chatRecord";
@@ -13,6 +14,7 @@ export default async function IndexPage({params: {locale = ''}}) {
   unstable_setRequestLocale(locale);
 
   const indexText = await getIndexPageText();
+  const commonText = await getCommonText();
 
   const resultInfoListInit = await getLatestChatResultList(locale);
 
@@ -21,6 +23,7 @@ export default async function IndexPage({params: {locale = ''}}) {
       locale={locale}
       indexText={indexText}
       resultInfoListInit={resultInfoListInit}
+      commonText={commonText}
     />
   )
 }

@@ -27,7 +27,7 @@ const TurnstileWidget = forwardRef<TurnstileRef, TurnstileWidgetProps>(
     }));
 
     const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
-
+    console.log("dong siteKey:",siteKey)
     if (!siteKey) {
       console.error('Turnstile site key not configured');
       return null;

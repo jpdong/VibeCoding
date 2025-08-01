@@ -1,11 +1,17 @@
+'use client'
 import Link from "next/link";
 import {getLinkHref} from "~/utils/buildLink";
 import {useCommonContext} from "~/context/common-context";
 
+interface FooterProps {
+  locale: string;
+  page: string;
+}
+
 export default function Footer({
                                  locale,
                                  page
-                               }) {
+                               }: FooterProps) {
   const {setShowLoadingModal, commonText, menuText} = useCommonContext();
 
   const checkPageAndLoading = (toPage) => {
