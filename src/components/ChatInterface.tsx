@@ -34,23 +34,8 @@ const ChatInterface = ({ commonText }: ChatInterfaceProps) => {
     getLocalStorage();
   }, []);
 
-  const verifyTurnstile = async (token: string) => {
-    try {
-      const response = await fetch('/api/turnstile/verify', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ token }),
-      });
-
-      const result = await response.json();
-      return result.success;
-    } catch (error) {
-      console.error('Turnstile verification error:', error);
-      return false;
-    }
-  };
+  // Removed client-side verification to avoid token invalidation
+  // The server will handle all Turnstile verification
 
   const handleGetAnswer = async () => {
     console.log(textStr);
@@ -75,18 +60,10 @@ const ChatInterface = ({ commonText }: ChatInterfaceProps) => {
       return;
     }
 
-    // Verify Turnstile token
-    const isVerified = await verifyTurnstile(turnstileToken);
-    if (!isVerified) {
-      setToastText(commonText.securityVerificationFailed);
-      setShowToastModal(true);
-      turnstileRef.current?.reset();
-      setTurnstileToken(null);
-      return;
-    }
-
+    // Skip client-side verification to avoid token invalidation
+    // The server will handle the verification
     await generateTextStream();
-    
+
     // Reset Turnstile after successful generation
     turnstileRef.current?.reset();
     setTurnstileToken(null);
@@ -255,7 +232,7 @@ const ChatInterface = ({ commonText }: ChatInterfaceProps) => {
           <div className="relative shadow-lg">
             <div className="overflow-hidden focus-within:ring-1 p-2">
               <div className="prose w-full max-w-5xl mx-auto text-gray-300 div-markdown-color h-96 overflow-y-auto"
-                   ref={textareaRef}>
+                ref={textareaRef}>
                 <Markdown remarkPlugins={[remarkGfm]}>
                   {resStr}
                 </Markdown>
