@@ -30,7 +30,11 @@
     "chatQuestionText": "Code Question:",
     "chatAnswerText": "Code Solution:",
     "inputTipText": "Describe your coding problem, include relevant code snippets for better assistance.",
-    "inputTipText2": "Code solutions are publicly displayed and indexed by search engines."
+    "inputTipText2": "Code solutions are publicly displayed and indexed by search engines.",
+    "securityVerificationText": "Please complete the security verification:",
+    "securityVerificationRequired": "Please complete the security verification first.",
+    "securityVerificationFailed": "Security verification failed. Please try again.",
+    "securityVerificationError": "Security verification error. Please refresh and try again."
   },
   "MenuText": {
     "header0": "Question Hub",

@@ -8,11 +8,55 @@ const db = getDb();
 
 export const maxDuration = 300;
 
+async function verifyTurnstile(token: string): Promise<boolean> {
+  try {
+    const secretKey = process.env.TURNSTILE_SECRET_KEY;
+    if (!secretKey) {
+      console.error('Turnstile secret key not configured');
+      return false;
+    }
+
+    const verifyResponse = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        secret: secretKey,
+        response: token,
+      }),
+    });
+
+    const verifyResult = await verifyResponse.json();
+    return verifyResult.success;
+  } catch (error) {
+    console.error('Turnstile verification error:', error);
+    return false;
+  }
+}
+
 export async function POST(req: Request, res: Response) {
   const json = await req.json();
   const textStr = json.textStr;
   const user_id = json.user_id;
+  const turnstileToken = json.turnstileToken;
   console.log('textStr===>', textStr);
+
+  // Verify Turnstile token
+  if (turnstileToken) {
+    const isVerified = await verifyTurnstile(turnstileToken);
+    if (!isVerified) {
+      return new Response("Security verification failed.", {
+        status: 403,
+        statusText: "Security verification failed.",
+      });
+    }
+  } else {
+    return new Response("Security verification required.", {
+      status: 403,
+      statusText: "Security verification required.",
+    });
+  }
 
   // 限制请求
   if (process.env.NEXT_PUBLIC_CHECK_GOOGLE_LOGIN != '0' && !user_id) {

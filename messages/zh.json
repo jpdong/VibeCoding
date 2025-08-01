@@ -30,7 +30,11 @@
     "chatQuestionText": "代码问题：",
     "chatAnswerText": "代码解决方案：",
     "inputTipText": "描述你的编程问题，包含相关代码片段以获得更好的帮助",
-    "inputTipText2": "代码解决方案将会公开显示，并被搜索引擎抓取"
+    "inputTipText2": "代码解决方案将会公开显示，并被搜索引擎抓取",
+    "securityVerificationText": "请完成安全验证：",
+    "securityVerificationRequired": "请先完成安全验证。",
+    "securityVerificationFailed": "安全验证失败，请重试。",
+    "securityVerificationError": "安全验证错误，请刷新页面重试。"
   },
   "MenuText": {
     "header0": "问题广场",
