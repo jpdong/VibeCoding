@@ -179,13 +179,13 @@ const PageComponent = ({
                       <a href={getLinkHref(locale, '')}
                          title={process.env.NEXT_PUBLIC_A_TITLE_TEXT}
                          className={"cursor-pointer main-color-0 hover:text-blue-600"}>
-                        GPT
+                        AI
                       </a>
                       :
                       <a href={getLinkHref(locale, '')}
                          title={process.env.NEXT_PUBLIC_A_TITLE_TEXT}
                          className={"cursor-pointer main-color-1 hover:text-blue-600"}>
-                        ChatLLM
+                        {process.env.NEXT_PUBLIC_A_TITLE_TEXT}
                       </a>
                   }
                   {indexText.h2TextMiddle}
@@ -194,13 +194,13 @@ const PageComponent = ({
                       <a href={getLinkHref(locale, '')}
                          title={process.env.NEXT_PUBLIC_A_TITLE_TEXT}
                          className={"cursor-pointer main-color-0 hover:text-blue-600"}>
-                        GPT
+                        AI
                       </a>
                       :
                       <a href={getLinkHref(locale, '')}
                          title={process.env.NEXT_PUBLIC_A_TITLE_TEXT}
                          className={"cursor-pointer main-color-1 hover:text-blue-600"}>
-                        ChatLLM
+                        {process.env.NEXT_PUBLIC_A_TITLE_TEXT}
                       </a>
                   }
                   {indexText.h2TextEnd}

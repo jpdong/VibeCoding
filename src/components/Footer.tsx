@@ -52,19 +52,7 @@ export default function Footer({
               </div>
             </div>
             <div className="md:grid md:grid-cols-2 md:gap-8">
-              <div>
-                <div className="text-sm font-semibold leading-6 footer-leading-text"></div>
-                <ul role="list" className="mt-6 space-y-4">
-                  <a
-                    className="text-sm leading-6 footer-link"
-                    target={"_blank"}
-                    href={"https://chatgpt4o.ai/"}
-                    title={"Free ChatGPT 4o (GPT-4o)"}
-                  >
-                    Source by ChatGPT4o
-                  </a>
-                </ul>
-              </div>
+              
               <div className="mt-10 md:mt-0">
                 <div className="text-sm font-semibold leading-6 footer-leading-text">
                   {(process.env.NEXT_PUBLIC_PRIVACY_POLICY_OPEN != '0' || process.env.NEXT_PUBLIC_TERMS_OF_SERVICE_OPEN != '0') ? menuText.footerLegal : ''}

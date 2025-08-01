@@ -15,7 +15,7 @@ const TextCardItem = ({
       <div className="relative">
         <span
           className="absolute top-0 left-0 px-2 py-1 text-s font-bold text-white bg-[#ffa11b] rounded-tl rounded-br">
-          GPT-4o
+          Vibe Coding
         </span>
         <div className={"bg-white rounded-xl p-4 shadow-lg w-full md:w-70 h-70"}>
           <Link
@@ -42,7 +42,7 @@ const TextCardItem = ({
                 href={getLinkHref(locale, '')}
                 className="cursor-pointer hover:text-blue-600"
               >
-                <span className="text-[#f05011] ml-[2px]">ChatLLM</span>
+                <span className="text-[#f05011] ml-[2px]">{process.env.NEXT_PUBLIC_A_TITLE_TEXT}</span>
               </Link>
               {commonText.createTextEnd.replace(/%username%/g, item.user_name)}
             </div>
