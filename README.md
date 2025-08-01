@@ -1,5 +1,5 @@
-# ChatLLM
-ChatLLM 代码，仅限哥飞的朋友们社群成员使用
+# Vibe Coding
+Vibe Coding - AI-powered coding assistant for developers
 
 ### 1. 右上角 Fork 本项目到你自己的 github 仓库
 
@@ -12,11 +12,11 @@ git clone your git url
 ### 3. 安装依赖
 
 ```bash
-cd ChatLLM && yarn
+cd vibe-coding && yarn
 #or
-cd ChatLLM && npm install
+cd vibe-coding && npm install
 #or
-cd ChatLLM && pnpm install
+cd vibe-coding && pnpm install
 ```
 
 ### 4. 复制 .env.example 重命名为 .env.local

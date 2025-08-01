@@ -33,6 +33,10 @@ export const getCommonText = async () => {
     chatAnswerText: tCommonAddition('chatAnswerText'),
     inputTipText: tCommonAddition('inputTipText'),
     inputTipText2: tCommonAddition('inputTipText2'),
+    securityVerificationText: tCommonAddition('securityVerificationText'),
+    securityVerificationRequired: tCommonAddition('securityVerificationRequired'),
+    securityVerificationFailed: tCommonAddition('securityVerificationFailed'),
+    securityVerificationError: tCommonAddition('securityVerificationError'),
   }
 }
 

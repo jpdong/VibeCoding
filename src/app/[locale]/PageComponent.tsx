@@ -9,6 +9,7 @@ import {getLinkHref} from "~/utils/buildLink";
 import TextCardItem from "~/components/TextCardItem";
 import Markdown from "react-markdown";
 import remarkGfm from 'remark-gfm';
+import TurnstileWidget, { TurnstileRef } from "~/components/TurnstileWidget";
 
 const PageComponent = ({
                          locale,
@@ -51,8 +52,29 @@ const PageComponent = ({
 
   const [textStr, setTextStr] = useState('');
   const [resStr, setResStr] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [showTurnstile, setShowTurnstile] = useState(false);
+  const turnstileRef = useRef<TurnstileRef>(null);
 
-  const generateTextStream = async () => {
+  const verifyTurnstile = async (token: string) => {
+    try {
+      const response = await fetch('/api/turnstile/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token }),
+      });
+
+      const result = await response.json();
+      return result.success;
+    } catch (error) {
+      console.error('Turnstile verification error:', error);
+      return false;
+    }
+  };
+
+  const handleGetAnswer = async () => {
     console.log(textStr);
     if (!textStr) {
       return;
@@ -65,9 +87,38 @@ const PageComponent = ({
       setLocalStorage();
       return;
     }
+
+    // Check if Turnstile verification is needed
+    if (!turnstileToken) {
+      setShowTurnstile(true);
+      setToastText(commonText.securityVerificationRequired);
+      setShowToastModal(true);
+      return;
+    }
+
+    // Verify Turnstile token
+    const isVerified = await verifyTurnstile(turnstileToken);
+    if (!isVerified) {
+      setToastText(commonText.securityVerificationFailed);
+      setShowToastModal(true);
+      turnstileRef.current?.reset();
+      setTurnstileToken(null);
+      return;
+    }
+
+    await generateTextStream();
+    
+    // Reset Turnstile after successful generation
+    turnstileRef.current?.reset();
+    setTurnstileToken(null);
+    setShowTurnstile(false);
+  };
+
+  const generateTextStream = async () => {
     const requestData = {
       textStr: textStr,
-      user_id: userData?.user_id
+      user_id: userData?.user_id,
+      turnstileToken: turnstileToken
     }
     setShowLoadingModal(true);
     const response = await fetch(`/api/chat/generateTextStream`, {
@@ -113,6 +164,22 @@ const PageComponent = ({
       return prevState; // 保持 resStr 不变
     });
   }
+
+  const handleTurnstileVerify = (token: string) => {
+    setTurnstileToken(token);
+    setShowTurnstile(false);
+  };
+
+  const handleTurnstileError = () => {
+    setToastText(commonText.securityVerificationError);
+    setShowToastModal(true);
+    setTurnstileToken(null);
+  };
+
+  const handleTurnstileExpire = () => {
+    setTurnstileToken(null);
+    setShowTurnstile(true);
+  };
   const valueRef = useRef(resStr);
   useEffect(() => {
     valueRef.current = resStr;
@@ -179,13 +246,13 @@ const PageComponent = ({
                       <a href={getLinkHref(locale, '')}
                          title={process.env.NEXT_PUBLIC_A_TITLE_TEXT}
                          className={"cursor-pointer main-color-0 hover:text-blue-600"}>
-                        GPT
+                        AI
                       </a>
                       :
                       <a href={getLinkHref(locale, '')}
                          title={process.env.NEXT_PUBLIC_A_TITLE_TEXT}
                          className={"cursor-pointer main-color-1 hover:text-blue-600"}>
-                        ChatLLM
+                        {process.env.NEXT_PUBLIC_A_TITLE_TEXT}
                       </a>
                   }
                   {indexText.h2TextMiddle}
@@ -194,13 +261,13 @@ const PageComponent = ({
                       <a href={getLinkHref(locale, '')}
                          title={process.env.NEXT_PUBLIC_A_TITLE_TEXT}
                          className={"cursor-pointer main-color-0 hover:text-blue-600"}>
-                        GPT
+                        AI
                       </a>
                       :
                       <a href={getLinkHref(locale, '')}
                          title={process.env.NEXT_PUBLIC_A_TITLE_TEXT}
                          className={"cursor-pointer main-color-1 hover:text-blue-600"}>
-                        ChatLLM
+                        {process.env.NEXT_PUBLIC_A_TITLE_TEXT}
                       </a>
                   }
                   {indexText.h2TextEnd}
@@ -229,12 +296,25 @@ const PageComponent = ({
                 <div className="flex justify-center items-center space-x-3 border-t border-gray-200 px-2 py-2">
                   <div className="pt-2">
                     <button
-                      onClick={() => generateTextStream()}
+                      onClick={handleGetAnswer}
                       className="w-full inline-flex justify-center items-center rounded-md button-bg px-3 py-2 text-md font-semibold text-white shadow-sm">
                       {commonText.getAnswerText}
                     </button>
                   </div>
                 </div>
+                {showTurnstile && (
+                  <div className="border-t border-gray-200 px-2 py-4">
+                    <div className="text-center text-sm text-gray-600 mb-2">
+                      {commonText.securityVerificationText}
+                    </div>
+                    <TurnstileWidget
+                      ref={turnstileRef}
+                      onVerify={handleTurnstileVerify}
+                      onError={handleTurnstileError}
+                      onExpire={handleTurnstileExpire}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </div>
