@@ -5,6 +5,8 @@ import { getLinkHref } from "~/utils/buildLink";
 import TextCardItem from "~/components/TextCardItem";
 import ChatInterface from "~/components/ChatInterface";
 import ClientNavLink from "~/components/ClientNavLink";
+import SEOContent from "~/components/SEOContent";
+import StructuredData from "~/components/StructuredData";
 
 interface PageComponentProps {
   locale: string;
@@ -30,6 +32,7 @@ const PageComponent = ({
         title={indexText.title}
         description={indexText.description}
       />
+      <StructuredData commonText={commonText} locale={locale} />
       <Header
         locale={locale}
         page={pagePath}
@@ -116,6 +119,9 @@ const PageComponent = ({
           }
 
         </div>
+
+        {/* SEO Content Section */}
+        <SEOContent commonText={commonText} />
 
       </div>
       <Footer
