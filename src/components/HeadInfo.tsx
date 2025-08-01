@@ -64,7 +64,7 @@ const HeadInfo = ({
             }
           }
           if (locale == item.lang) {
-            return <link key={href + 'canonical'} rel="canonical" hrefLang={hrefLang} href={href}/>
+            return <link key={href + 'canonical'} rel="canonical" hrefLang={hrefLang} href={href}>
           }
         })
       }
