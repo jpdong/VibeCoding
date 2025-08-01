@@ -1,12 +1,18 @@
+'use client'
 import {getLinkHref} from "~/utils/buildLink";
 import Link from "next/link";
 import {useCommonContext} from "~/context/common-context";
 import Markdown from "react-markdown";
 
+interface TextCardItemProps {
+  locale: string;
+  item: any;
+}
+
 const TextCardItem = ({
                       locale,
                       item,
-                      }) => {
+                      }: TextCardItemProps) => {
 
   const {commonText, setShowLoadingModal} = useCommonContext();
 
