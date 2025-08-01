@@ -14,6 +14,7 @@ const ChatInterface = ({ commonText }: ChatInterfaceProps) => {
   const [resStr, setResStr] = useState('');
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [showTurnstile, setShowTurnstile] = useState(false);
+  const [pendingGeneration, setPendingGeneration] = useState(false);
   const turnstileRef = useRef<TurnstileRef>(null);
   const textareaRef = useRef<HTMLDivElement>(null);
   const valueRef = useRef(resStr);
@@ -54,27 +55,34 @@ const ChatInterface = ({ commonText }: ChatInterfaceProps) => {
 
     // Check if Turnstile verification is needed
     if (!turnstileToken) {
+      setPendingGeneration(true);
       setShowTurnstile(true);
       setToastText(commonText.securityVerificationRequired);
       setShowToastModal(true);
       return;
     }
 
+    // Execute generation directly if token is available
+    await executeGeneration(turnstileToken);
+  };
+
+  const executeGeneration = async (token: string) => {
     // Skip client-side verification to avoid token invalidation
     // The server will handle the verification
-    await generateTextStream();
+    await generateTextStream(token);
 
     // Reset Turnstile after successful generation
     turnstileRef.current?.reset();
     setTurnstileToken(null);
     setShowTurnstile(false);
+    setPendingGeneration(false);
   };
 
-  const generateTextStream = async () => {
+  const generateTextStream = async (token: string) => {
     const requestData = {
       textStr: textStr,
       user_id: userData?.user_id,
-      turnstileToken: turnstileToken
+      turnstileToken: token
     }
     setShowLoadingModal(true);
     const response = await fetch(`/api/chat/generateTextStream`, {
@@ -91,6 +99,15 @@ const ChatInterface = ({ commonText }: ChatInterfaceProps) => {
     if (response.status === 429) {
       setToastText("Requested too frequently!");
       setShowToastModal(true);
+      return;
+    }
+    if (response.status === 403) {
+      setToastText(commonText.securityVerificationFailed);
+      setShowToastModal(true);
+      turnstileRef.current?.reset();
+      setTurnstileToken(null);
+      setShowTurnstile(true);
+      setPendingGeneration(false);
       return;
     }
     const data = response.body;
@@ -122,19 +139,32 @@ const ChatInterface = ({ commonText }: ChatInterfaceProps) => {
   }
 
   const handleTurnstileVerify = (token: string) => {
+    console.log('Turnstile verification completed, token received:', token.substring(0, 20) + '...');
     setTurnstileToken(token);
     setShowTurnstile(false);
+
+    // If there's a pending generation request, execute it now
+    if (pendingGeneration) {
+      setPendingGeneration(false);
+      // Use setTimeout to ensure state updates are processed
+      setTimeout(() => {
+        executeGeneration(token);
+      }, 100);
+    }
   };
 
   const handleTurnstileError = () => {
+    console.log('Turnstile verification error occurred');
     setToastText(commonText.securityVerificationError);
     setShowToastModal(true);
     setTurnstileToken(null);
+    setPendingGeneration(false);
   };
 
   const handleTurnstileExpire = () => {
     setTurnstileToken(null);
     setShowTurnstile(true);
+    // Keep pendingGeneration true so user doesn't need to click again
   };
 
   const saveChatText = async () => {
@@ -201,7 +231,9 @@ const ChatInterface = ({ commonText }: ChatInterfaceProps) => {
             {showTurnstile && (
               <div className="border-t border-gray-200 px-2 py-4">
                 <div className="text-center text-sm text-gray-600 mb-2">
-                  {commonText.securityVerificationText}
+                  {pendingGeneration
+                    ? "Please complete security verification to get your answer:"
+                    : commonText.securityVerificationText}
                 </div>
                 <TurnstileWidget
                   ref={turnstileRef}
@@ -209,6 +241,11 @@ const ChatInterface = ({ commonText }: ChatInterfaceProps) => {
                   onError={handleTurnstileError}
                   onExpire={handleTurnstileExpire}
                 />
+                {pendingGeneration && (
+                  <div className="text-center text-xs text-gray-500 mt-2">
+                    Your request will be processed automatically after verification
+                  </div>
+                )}
               </div>
             )}
           </div>
