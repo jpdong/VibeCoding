@@ -28,6 +28,8 @@ export const languagesEn = [
 
 export const pathnames = {
   '/': '/',
+  '/blog': '/blog',
+  '/blog/[slug]': '/blog/[slug]',
 } satisfies Pathnames<typeof locales>;
 
 // Use the default: `always`，设置为 as-needed可不显示默认路由
