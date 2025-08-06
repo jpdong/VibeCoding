@@ -6,6 +6,8 @@ import {ReactNode} from 'react';
 import {locales} from '~/config';
 import {CommonProvider} from '~/context/common-context';
 import {NextAuthProvider} from '~/context/next-auth-context';
+import {AuthProvider} from '~/context/auth-context';
+import OneTapLogin from '~/components/auth/OneTapLogin';
 import {GoogleAnalytics} from '@next/third-parties/google'
 import {getAuthText, getCommonText, getMenuText} from "~/configs/languageText";
 import CookieConsent from "../../components/analytics/CookieConsent"
@@ -50,13 +52,16 @@ export default async function LocaleLayout({
     </head>
     <body suppressHydrationWarning={true} className={clsx(inter.className, 'flex flex-col background-div')}>
     <NextAuthProvider>
-      <CommonProvider
-        commonText={commonText}
-        authText={authText}
-        menuText={menuText}
-      >
-        {children}
-      </CommonProvider>
+      <AuthProvider>
+        <CommonProvider
+          commonText={commonText}
+          authText={authText}
+          menuText={menuText}
+        >
+          <OneTapLogin />
+          {children}
+        </CommonProvider>
+      </AuthProvider>
     </NextAuthProvider>
     <CookieConsent />
     </body>

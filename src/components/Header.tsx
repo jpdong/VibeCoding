@@ -2,13 +2,14 @@
 import {useState} from 'react'
 import {Dialog} from '@headlessui/react'
 import {Bars3Icon, XMarkIcon} from '@heroicons/react/24/outline'
-import {GlobeAltIcon} from '@heroicons/react/24/outline'
+import {GlobeAltIcon, UserCircleIcon, CreditCardIcon} from '@heroicons/react/24/outline'
 import {Fragment} from 'react'
 import {Menu, Transition} from '@headlessui/react'
 import {ChevronDownIcon} from '@heroicons/react/20/solid'
 import Link from "next/link";
 import {languages} from "~/config";
 import {useCommonContext} from '~/context/common-context'
+import {useAuth} from '~/context/auth-context'
 import LoadingModal from "./LoadingModal";
 import LoginButton from './LoginButton';
 import LoginModal from './LoginModal';
@@ -16,6 +17,8 @@ import LogoutModal from "./LogoutModal";
 import {getLinkHref} from "~/utils/buildLink";
 import ToastModal from "~/components/ToastModal";
 import OneTapComponent from "~/components/OneTapComponent";
+import AuthButton from './auth/AuthButton';
+import UserMenu from './auth/UserMenu';
 
 export default function Header({
                                  locale,
@@ -108,7 +111,7 @@ export default function Header({
             <Bars3Icon className="h-6 w-6" aria-hidden="true"/>
           </button>
         </div>
-        <div className="hidden ltr:lg:ml-14 rtl:lg:mr-14 lg:flex lg:flex-1 lg:gap-x-6">
+        <div className="hidden ltr:lg:ml-14 rtl:lg:mr-14 lg:flex lg:flex-1 lg:gap-x-6 lg:items-center">
           {
             process.env.NEXT_PUBLIC_DISCOVER_OPEN != '0' ?
               <Link
@@ -131,6 +134,15 @@ export default function Header({
               :
               null
           }
+          
+          {/* Pricing Link */}
+          <Link
+            href={getLinkHref(locale, 'pricing')}
+            onClick={() => checkPageAndLoading('pricing')}
+            className={`text-sm font-semibold leading-6 header-link ${page === 'pricing' ? 'header-choose-color': ''}`}>
+            <CreditCardIcon className="w-4 h-4 inline mr-1" />
+            {commonText.pricingText || 'Pricing'}
+          </Link>
         </div>
         <Menu as="div" className="hidden lg:relative lg:inline-block lg:text-left z-30">
           <div>
@@ -175,14 +187,10 @@ export default function Header({
             </Menu.Items>
           </Transition>
         </Menu>
-        {
-          process.env.NEXT_PUBLIC_CHECK_GOOGLE_LOGIN != '0' ?
-            <div className="hidden ltr:lg:ml-2 rtl:lg:mr-2 lg:relative lg:inline-block lg:text-left">
-              <LoginButton buttonType={userData.email ? 1 : 0} loginText={authText.loginText}/>
-            </div>
-            :
-            null
-        }
+        {/* Authentication Button */}
+        <div className="hidden lg:flex lg:items-center lg:space-x-4">
+          <AuthButton commonText={commonText} authText={authText} />
+        </div>
       </nav>
       <Dialog as="div" className="lg:hidden" open={mobileMenuOpen} onClose={setMobileMenuOpen}>
         <div className="fixed inset-0 z-30"/>
@@ -242,6 +250,15 @@ export default function Header({
                     null
                 }
 
+                {/* Pricing Link for Mobile */}
+                <Link
+                  href={getLinkHref(locale, 'pricing')}
+                  onClick={() => checkPageAndLoading('pricing')}
+                  className={`block rounded-lg px-3 py-2 text-base font-semibold leading-7 header-link ${page === 'pricing' ? 'header-choose-color': ''}`}>
+                  <CreditCardIcon className="w-4 h-4 inline mr-2" />
+                  {commonText.pricingText || 'Pricing'}
+                </Link>
+
               </div>
               <div className="ltr:ml-2 rtl:mr-2 py-4">
                 <Menu as="div" className="relative inline-block text-left z-20">
@@ -289,15 +306,10 @@ export default function Header({
                   </Transition>
                 </Menu>
               </div>
-              {
-                process.env.NEXT_PUBLIC_CHECK_GOOGLE_LOGIN != '0' ?
-                  <div
-                    className="relative inline-block text-left text-base font-semibold ltr:ml-2 rtl:mr-2">
-                    <LoginButton buttonType={userData.email ? 1 : 0} loginText={authText.loginText}/>
-                  </div>
-                  :
-                  null
-              }
+              {/* Mobile Authentication */}
+              <div className="py-4 border-t border-gray-200">
+                <AuthButton commonText={commonText} authText={authText} />
+              </div>
             </div>
           </div>
         </Dialog.Panel>

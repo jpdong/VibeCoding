@@ -40,7 +40,9 @@ export async function POST(req: Request, res: Response) {
   const textStr = json.textStr;
   const user_id = json.user_id;
   const turnstileToken = json.turnstileToken;
+  const modelId = json.modelId || model; // Use selected model or fallback to default
   console.log('textStr===>', textStr);
+  console.log('modelId===>', modelId);
 
   // Verify Turnstile token
   if (turnstileToken) {
@@ -97,7 +99,7 @@ export async function POST(req: Request, res: Response) {
         content: textStr
       }
     ],
-    model: model,
+    model: modelId, // Use the selected model
     temperature: temperature,
     stream: true
   }
@@ -110,6 +112,30 @@ export async function POST(req: Request, res: Response) {
       "authorization": `Bearer ${apiKey}`
     }
   });
+
+  // Track usage if user is authenticated
+  if (user_id && modelId) {
+    try {
+      // Estimate token usage (rough calculation)
+      const estimatedTokens = Math.ceil(textStr.length / 4); // Rough estimate: 1 token ≈ 4 characters
+      
+      // Record usage in background (don't block response)
+      fetch('/api/subscription/usage', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          modelId: modelId,
+          tokensUsed: estimatedTokens,
+        }),
+      }).catch(error => {
+        console.error('Failed to record usage:', error);
+      });
+    } catch (error) {
+      console.error('Usage tracking error:', error);
+    }
+  }
 
   return parseOpenAIStream(response);
 }

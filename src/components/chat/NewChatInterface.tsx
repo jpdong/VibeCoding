@@ -1,9 +1,11 @@
 'use client'
 import React, { useEffect, useRef, useState } from "react";
 import { useCommonContext } from "~/context/common-context";
+import { useAuth, useModelAccess } from "~/context/auth-context";
 import TurnstileWidget, { TurnstileRef } from "~/components/TurnstileWidget";
-import { Message, ChatState, AVAILABLE_MODELS } from "~/types/chat";
+import { Message, ChatState } from "~/types/chat";
 import ChatHeader from "./ChatHeader";
+import EnhancedModelSelector from "./EnhancedModelSelector";
 import MessageList from "./MessageList";
 import InputArea from "./InputArea";
 import SecurityVerification from "./SecurityVerification";
@@ -40,11 +42,14 @@ const NewChatInterface: React.FC<NewChatInterfaceProps> = ({ commonText }) => {
     setShowToastModal
   } = useCommonContext();
 
+  const { user, isAuthenticated, login } = useAuth();
+  const { canAccessModel, hasPremium } = useModelAccess();
+
   // Initialize component
   useEffect(() => {
     // Load saved model selection
     const savedModel = localStorage.getItem('selectedModel');
-    if (savedModel && AVAILABLE_MODELS.find(m => m.id === savedModel && m.available)) {
+    if (savedModel) {
       setChatState(prev => ({ ...prev, selectedModel: savedModel }));
     }
 
@@ -86,7 +91,7 @@ const NewChatInterface: React.FC<NewChatInterfaceProps> = ({ commonText }) => {
 
   // Handle message send
   const handleSendMessage = async () => {
-    const { currentInput, turnstileToken } = chatState;
+    const { currentInput, turnstileToken, selectedModel } = chatState;
     
     // Clear previous errors
     setError(null);
@@ -108,9 +113,31 @@ const NewChatInterface: React.FC<NewChatInterfaceProps> = ({ commonText }) => {
       return;
     }
 
-    // Check authentication
-    if (process.env.NEXT_PUBLIC_CHECK_GOOGLE_LOGIN !== '0' && !userData) {
-      setShowLoginModal(true);
+    // Check if user can access the selected model
+    try {
+      const response = await fetch(`/api/models/${selectedModel}`, {
+        credentials: 'include',
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && !data.model.accessible) {
+          if (!isAuthenticated) {
+            await login();
+            return;
+          } else {
+            setError('This model requires a premium subscription. Please upgrade to access it.');
+            return;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Model access check failed:', error);
+    }
+
+    // Check authentication (fallback for older logic)
+    if (process.env.NEXT_PUBLIC_CHECK_GOOGLE_LOGIN !== '0' && !isAuthenticated && !userData) {
+      await login();
       localStorage.setItem('textStr', currentInput);
       return;
     }
@@ -155,8 +182,9 @@ const NewChatInterface: React.FC<NewChatInterfaceProps> = ({ commonText }) => {
     try {
       const requestData = {
         textStr: currentInput,
-        user_id: userData?.user_id,
-        turnstileToken: token
+        user_id: user?.id || userData?.user_id,
+        turnstileToken: token,
+        modelId: selectedModel
       };
 
       setShowLoadingModal(true);
@@ -286,14 +314,14 @@ const NewChatInterface: React.FC<NewChatInterfaceProps> = ({ commonText }) => {
       console.error('Generation error:', error);
       setShowLoadingModal(false);
       
-      let errorMessage = 'An error occurred while generating the response.';
+      let errorMessage = commonText.generationError || 'An error occurred while generating the response.';
       
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
-          errorMessage = 'Request timed out. Please try again.';
+          errorMessage = commonText.requestTimeout || 'Request timed out. Please try again.';
           setNetworkError(true);
         } else if (error.message.includes('fetch')) {
-          errorMessage = 'Network error. Please check your connection and try again.';
+          errorMessage = commonText.networkError || 'Network error. Please check your connection and try again.';
           setNetworkError(true);
         } else {
           errorMessage = error.message;
@@ -321,7 +349,7 @@ const NewChatInterface: React.FC<NewChatInterfaceProps> = ({ commonText }) => {
       const requestData = {
         input_text: inputText,
         output_text: outputText,
-        user_id: userData?.user_id
+        user_id: user?.id || userData?.user_id
       };
       
       const response = await fetch(`/api/chat/saveText`, {
@@ -416,7 +444,6 @@ const NewChatInterface: React.FC<NewChatInterfaceProps> = ({ commonText }) => {
       {/* Header */}
       <ChatHeader
         selectedModel={chatState.selectedModel}
-        availableModels={AVAILABLE_MODELS}
         onModelChange={handleModelChange}
         commonText={commonText}
       />
