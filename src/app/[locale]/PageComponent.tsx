@@ -3,7 +3,7 @@ import Header from "~/components/Header";
 import Footer from "~/components/Footer";
 import { getLinkHref } from "~/utils/buildLink";
 import TextCardItem from "~/components/TextCardItem";
-import ChatInterface from "~/components/ChatInterface";
+import NewChatInterface from "~/components/chat/NewChatInterface";
 import ClientNavLink from "~/components/ClientNavLink";
 import SEOContent from "~/components/SEOContent";
 import StructuredData from "~/components/StructuredData";
@@ -81,7 +81,9 @@ const PageComponent = ({
             </div>
           </div>
 
-          <ChatInterface commonText={commonText} />
+          <div className="w-full max-w-6xl mx-auto">
+            <NewChatInterface commonText={commonText} />
+          </div>
 
           {
             resultInfoList?.length > 0 ?
