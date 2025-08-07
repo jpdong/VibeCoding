@@ -109,6 +109,12 @@ export default function Header({
           </button>
         </div>
         <div className="hidden ltr:lg:ml-14 rtl:lg:mr-14 lg:flex lg:flex-1 lg:gap-x-6">
+          <Link
+            href={getLinkHref(locale, 'blog')}
+            onClick={() => checkPageAndLoading('blog')}
+            className={`text-sm font-semibold leading-6 header-link ${page.indexOf('blog') != -1 ? 'header-choose-color': ''}`}>
+            {locale === 'zh' ? '博客' : 'Blog'}
+          </Link>
           {
             process.env.NEXT_PUBLIC_DISCOVER_OPEN != '0' ?
               <Link
@@ -219,6 +225,12 @@ export default function Header({
           <div className="mt-6 flow-root">
             <div className="divide-y divide-gray-500/10">
               <div className="space-y-2 py-6">
+                <Link
+                  href={getLinkHref(locale, 'blog')}
+                  onClick={() => checkPageAndLoading('blog')}
+                  className={`block rounded-lg px-3 py-2 text-base font-semibold leading-7 header-link ${page.indexOf('blog') != -1 ? 'header-choose-color': ''}`}>
+                  {locale === 'zh' ? '博客' : 'Blog'}
+                </Link>
                 {
                   process.env.NEXT_PUBLIC_DISCOVER_OPEN != '0' ?
                     <Link
