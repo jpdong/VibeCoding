@@ -6,6 +6,7 @@ import { generateBlogListMetadata, generateBlogListSchema, generateWebsiteSchema
 import BlogHero from '~/components/blog/BlogHero';
 import BlogList from '~/components/blog/BlogList';
 import TagCloud from '~/components/blog/TagCloud';
+import BlogPageWrapper from '~/components/blog/BlogPageWrapper';
 import Header from '~/components/Header';
 import Footer from '~/components/Footer';
 import { locales } from '~/config';
@@ -89,7 +90,7 @@ export default async function BlogPage({ params, searchParams }: BlogPageProps) 
     const websiteSchema = generateWebsiteSchema(locale);
 
     return (
-      <>
+      <BlogPageWrapper>
         {/* 结构化数据 */}
         <script
           type="application/ld+json"
@@ -213,7 +214,7 @@ export default async function BlogPage({ params, searchParams }: BlogPageProps) 
       
       {/* Footer */}
       <Footer locale={locale} page="blog" />
-      </>
+      </BlogPageWrapper>
     );
   } catch (error) {
     console.error('Error loading blog page:', error);

@@ -11,6 +11,7 @@ import ReadingProgress from '~/components/blog/ReadingProgress';
 import TableOfContents from '~/components/blog/TableOfContents';
 import ShareButtons from '~/components/blog/ShareButtons';
 import RelatedPosts from '~/components/blog/RelatedPosts';
+import BlogPageWrapper from '~/components/blog/BlogPageWrapper';
 import Header from '~/components/Header';
 import Footer from '~/components/Footer';
 import { locales } from '~/config';
@@ -86,7 +87,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   ]);
 
   return (
-    <>
+    <BlogPageWrapper>
       {/* 结构化数据 */}
       <script
         type="application/ld+json"
@@ -258,6 +259,6 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
       {/* Footer */}
       <Footer locale={locale} page="blog" />
-    </>
+    </BlogPageWrapper>
   );
 }
