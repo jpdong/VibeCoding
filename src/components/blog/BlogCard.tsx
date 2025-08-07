@@ -1,10 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { BlogPost } from '~/types/blog';
 import { cn } from '~/lib/design-system';
+import { isValidCoverImage, createImageErrorHandler } from '~/lib/image-utils';
 
 interface BlogCardProps {
   post: BlogPost;
@@ -19,6 +20,8 @@ export default function BlogCard({
   showExcerpt = true,
   className 
 }: BlogCardProps) {
+  const [imageError, setImageError] = useState(false);
+  
   const sizeClasses = {
     small: 'p-4',
     medium: 'p-6',
@@ -37,26 +40,32 @@ export default function BlogCard({
     large: 'h-64'
   };
 
+  // Validate cover image and check for errors
+  const hasValidImage = isValidCoverImage(post.coverImage) && !imageError;
+  const handleImageError = createImageErrorHandler(() => setImageError(true));
+
   return (
     <article className={cn(
       'group relative bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 ease-out overflow-hidden border border-gray-100',
       'hover:-translate-y-1 hover:scale-[1.02]',
+      'flex flex-col h-full', // Ensure consistent height with flexbox
       sizeClasses[size],
       className
     )}>
-      <Link href={`/${post.locale}/blog/${post.slug}`} className="block">
+      <Link href={`/${post.locale}/blog/${post.slug}`} className="block h-full flex flex-col">
         {/* 封面图片 */}
-        {post.coverImage && post.coverImage.trim() && (
+        {hasValidImage && (
           <div className={cn(
-            'relative overflow-hidden rounded-lg mb-4 bg-gray-100',
+            'relative overflow-hidden rounded-lg mb-4 bg-gray-100 flex-shrink-0',
             imageClasses[size]
           )}>
             <Image
-              src={post.coverImage}
+              src={post.coverImage!}
               alt={post.title}
               fill
               className="object-cover transition-transform duration-300 group-hover:scale-105"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              onError={handleImageError}
             />
             {post.featured && (
               <div className="absolute top-3 left-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-2 py-1 rounded-full text-xs font-medium">
@@ -66,67 +75,79 @@ export default function BlogCard({
           </div>
         )}
         
-        {/* 文章元信息 */}
-        <div className="flex items-center gap-3 mb-3 text-sm text-gray-500">
-          <time dateTime={post.date} className="font-medium">
-            {new Date(post.date).toLocaleDateString(post.locale === 'zh' ? 'zh-CN' : 'en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            })}
-          </time>
-          <span>•</span>
-          <span>{post.readingTime} min read</span>
-          <span>•</span>
-          <span className="text-blue-600 font-medium">{post.category}</span>
-        </div>
-        
-        {/* 标题 */}
-        <h2 className={cn(
-          'text-gray-900 mb-3 group-hover:text-blue-600 transition-colors duration-200 line-clamp-2',
-          titleClasses[size]
-        )}>
-          {post.title}
-        </h2>
-        
-        {/* 描述 */}
-        {showExcerpt && (
-          <p className="text-gray-600 mb-4 line-clamp-3 leading-relaxed">
-            {post.description}
-          </p>
-        )}
-        
-        {/* 标签 */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          {post.tags.slice(0, 3).map((tag) => (
-            <span
-              key={tag}
-              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 hover:bg-blue-100 hover:text-blue-800 transition-colors duration-200"
-            >
-              {tag}
-            </span>
-          ))}
-          {post.tags.length > 3 && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
-              +{post.tags.length - 3}
-            </span>
-          )}
-        </div>
-        
-        {/* 作者信息 */}
-        <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-              {post.author.charAt(0).toUpperCase()}
+        {/* Content container with flex-grow to fill remaining space */}
+        <div className="flex flex-col flex-grow">
+          {/* Featured badge for articles without images */}
+          {!hasValidImage && post.featured && (
+            <div className="mb-4">
+              <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+                Featured
+              </div>
             </div>
-            <span className="text-sm font-medium text-gray-700">{post.author}</span>
+          )}
+          
+          {/* 文章元信息 */}
+          <div className="flex items-center gap-3 mb-3 text-sm text-gray-500">
+            <time dateTime={post.date} className="font-medium">
+              {new Date(post.date).toLocaleDateString(post.locale === 'zh' ? 'zh-CN' : 'en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })}
+            </time>
+            <span>•</span>
+            <span>{post.readingTime} min read</span>
+            <span>•</span>
+            <span className="text-blue-600 font-medium">{post.category}</span>
           </div>
           
-          <div className="flex items-center text-blue-600 text-sm font-medium group-hover:translate-x-1 transition-transform duration-200">
-            Read more
-            <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
+          {/* 标题 */}
+          <h2 className={cn(
+            'text-gray-900 mb-3 group-hover:text-blue-600 transition-colors duration-200 line-clamp-2',
+            titleClasses[size]
+          )}>
+            {post.title}
+          </h2>
+          
+          {/* 描述 - flex-grow to push footer to bottom */}
+          {showExcerpt && (
+            <p className="text-gray-600 mb-4 line-clamp-3 leading-relaxed flex-grow">
+              {post.description}
+            </p>
+          )}
+          
+          {/* 标签 */}
+          <div className="flex flex-wrap gap-2 mb-4">
+            {post.tags.slice(0, 3).map((tag) => (
+              <span
+                key={tag}
+                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 hover:bg-blue-100 hover:text-blue-800 transition-colors duration-200"
+              >
+                {tag}
+              </span>
+            ))}
+            {post.tags.length > 3 && (
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+                +{post.tags.length - 3}
+              </span>
+            )}
+          </div>
+          
+          {/* 作者信息 - Always at bottom */}
+          <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-auto">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                {post.author.charAt(0).toUpperCase()}
+              </div>
+              <span className="text-sm font-medium text-gray-700">{post.author}</span>
+            </div>
+            
+            <div className="flex items-center text-blue-600 text-sm font-medium group-hover:translate-x-1 transition-transform duration-200">
+              Read more
+              <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
           </div>
         </div>
       </Link>
