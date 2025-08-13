@@ -178,7 +178,11 @@ const ChatInterface = ({ commonText }: ChatInterfaceProps) => {
       body: JSON.stringify(requestData)
     });
     const data = await response.json();
-    console.log(data);
+    if (data.skipped) {
+      console.log('内容未保存:', data.reason);
+    } else {
+      console.log('内容已保存到数据库');
+    }
   }
 
   const scrollToBottom = () => {
