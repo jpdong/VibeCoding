@@ -6,7 +6,10 @@ const siteName = 'Vibe Coding';
 
 // 生成博客文章的SEO元数据
 export function generateBlogMetadata(post: BlogPost): Metadata {
-  const postUrl = `${siteUrl}/${post.locale}/blog/${post.slug}`;
+  // 英文版本不显示 /en 前缀
+  const postUrl = post.locale === 'en' 
+    ? `${siteUrl}/blog/${post.slug}`
+    : `${siteUrl}/${post.locale}/blog/${post.slug}`;
   
   return {
     title: `${post.title} | ${siteName} Blog`,
@@ -51,7 +54,7 @@ export function generateBlogMetadata(post: BlogPost): Metadata {
     alternates: {
       canonical: postUrl,
       languages: {
-        'en': `/en/blog/${post.slug}`,
+        'en': `/blog/${post.slug}`,
         'zh': `/zh/blog/${post.slug}`
       }
     },
@@ -89,7 +92,10 @@ export function generateBlogListMetadata(locale: string, tag?: string, category?
       : `Browse all articles and tutorials in the ${category} category.`;
   }
 
-  const pageUrl = `${siteUrl}/${locale}/blog${tag ? `?tag=${tag}` : ''}${category ? `?category=${category}` : ''}`;
+  // 英文版本不显示 /en 前缀
+  const pageUrl = locale === 'en' 
+    ? `${siteUrl}/blog${tag ? `?tag=${tag}` : ''}${category ? `?category=${category}` : ''}`
+    : `${siteUrl}/${locale}/blog${tag ? `?tag=${tag}` : ''}${category ? `?category=${category}` : ''}`;
 
   return {
     title,
@@ -125,7 +131,7 @@ export function generateBlogListMetadata(locale: string, tag?: string, category?
     alternates: {
       canonical: pageUrl,
       languages: {
-        'en': '/en/blog',
+        'en': '/blog',
         'zh': '/zh/blog'
       }
     }
@@ -169,7 +175,7 @@ export function generateArticleSchema(post: BlogPost) {
     inLanguage: post.locale,
     mainEntityOfPage: {
       '@type': 'WebPage',
-      '@id': `${siteUrl}/${post.locale}/blog/${post.slug}`
+      '@id': post.locale === 'en' ? `${siteUrl}/blog/${post.slug}` : `${siteUrl}/${post.locale}/blog/${post.slug}`
     }
   };
 }
@@ -183,7 +189,7 @@ export function generateBlogListSchema(posts: BlogPost[], locale: string) {
     description: locale === 'zh' 
       ? '分享Web开发技术、编程教程和最佳实践'
       : 'Sharing web development technologies, programming tutorials, and best practices',
-    url: `${siteUrl}/${locale}/blog`,
+    url: locale === 'en' ? `${siteUrl}/blog` : `${siteUrl}/${locale}/blog`,
     inLanguage: locale,
     publisher: {
       '@type': 'Organization',
@@ -199,7 +205,7 @@ export function generateBlogListSchema(posts: BlogPost[], locale: string) {
       '@type': 'BlogPosting',
       headline: post.title,
       description: post.description,
-      url: `${siteUrl}/${post.locale}/blog/${post.slug}`,
+      url: post.locale === 'en' ? `${siteUrl}/blog/${post.slug}` : `${siteUrl}/${post.locale}/blog/${post.slug}`,
       datePublished: post.date,
       dateModified: post.lastModified || post.date,
       author: {
