@@ -1,7 +1,9 @@
 import {parseOpenAIStream} from "~/utils/openai-handle";
+import {parseOpenAIStreamWithUsage} from "~/utils/openai-handle-with-usage";
 import {apiKey, baseUrl, model, temperature} from "~/configs/openaiConfig";
 import {getUserById} from "~/servers/user";
 import {getDb} from "~/libs/db";
+import {canUserUseService, incrementUsage} from "~/servers/usageTracking";
 import * as process from "process";
 
 const db = getDb();
@@ -42,6 +44,11 @@ export async function POST(req: Request, res: Response) {
   const turnstileToken = json.turnstileToken;
   console.log('textStr===>', textStr);
 
+  // Get client IP for guest users
+  const clientIP = req.headers.get('x-forwarded-for') || 
+                   req.headers.get('x-real-ip') || 
+                   'unknown';
+
   // Verify Turnstile token
   if (turnstileToken) {
     const isVerified = await verifyTurnstile(turnstileToken);
@@ -58,34 +65,49 @@ export async function POST(req: Request, res: Response) {
     });
   }
 
-  // 限制请求
-  if (process.env.NEXT_PUBLIC_CHECK_GOOGLE_LOGIN != '0' && !user_id) {
-    return new Response("Login to continue.", {
-      status: 401,
-      statusText: "Login to continue.",
-    })
+  // Check usage limits first
+  const { canUse, usageInfo } = await canUserUseService(user_id, clientIP);
+  
+  if (!canUse) {
+    const errorMessage = user_id 
+      ? `Daily limit reached. You've used ${usageInfo.used}/${usageInfo.limit} generations today.`
+      : `Daily limit reached. You've used ${usageInfo.used}/${usageInfo.limit} generations today. Sign in for more!`;
+    
+    return new Response(JSON.stringify({
+      error: errorMessage,
+      usageInfo,
+      requiresUpgrade: usageInfo.userType !== 'premium'
+    }), {
+      status: 429,
+      statusText: "Usage limit exceeded",
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 
+  // Legacy login check (keeping for compatibility)
   if (process.env.NEXT_PUBLIC_CHECK_GOOGLE_LOGIN != '0') {
-    // 检查用户在数据库是否存在，不存在则返回需登录
-    const resultsUser = await getUserById(user_id);
-    if (resultsUser.email == '') {
-      return new Response("Login to continue.", {
-        status: 401,
-        statusText: "Login to continue.",
-      })
-    }
-    // 判断该用户上一次保存是否在 30 秒内，30 秒内的不允许再次提交
-    const {rows: existListByUser} = await db.query('select created_at from chat_record where user_id=$1 order by created_at desc limit 1', [user_id]);
-    if (existListByUser.length > 0) {
-      const existTime = new Date(existListByUser[0].created_at).getTime();
-      const currentTime = new Date().getTime();
-      const resultTime = (currentTime - existTime)/1000;
-      if (resultTime < 30) {
-        return new Response("Requested too frequently!", {
-          status: 429,
-          statusText: "Requested too frequently!",
+    if (user_id) {
+      // Check if user exists in database
+      const resultsUser = await getUserById(user_id);
+      if (resultsUser.email == '') {
+        return new Response("Login to continue.", {
+          status: 401,
+          statusText: "Login to continue.",
         })
+      }
+      
+      // Rate limiting: 30 seconds between requests
+      const {rows: existListByUser} = await db.query('select created_at from chat_record where user_id=$1 order by created_at desc limit 1', [user_id]);
+      if (existListByUser.length > 0) {
+        const existTime = new Date(existListByUser[0].created_at).getTime();
+        const currentTime = new Date().getTime();
+        const resultTime = (currentTime - existTime)/1000;
+        if (resultTime < 30) {
+          return new Response("Requested too frequently!", {
+            status: 429,
+            statusText: "Requested too frequently!",
+          })
+        }
       }
     }
   }
@@ -111,5 +133,12 @@ export async function POST(req: Request, res: Response) {
     }
   });
 
-  return parseOpenAIStream(response);
+  // 仅检查响应状态，用量统计将在流完成后自动处理
+  if (!response.ok) {
+    console.error('OpenAI API error:', response.status, response.statusText);
+    return parseOpenAIStream(response);
+  }
+
+  // 使用带用量统计的流解析器
+  return parseOpenAIStreamWithUsage(response, user_id, clientIP);
 }

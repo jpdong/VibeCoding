@@ -120,6 +120,7 @@ const PageComponent = ({
 
         </div>
 
+
         {/* SEO Content Section */}
         <SEOContent commonText={commonText} />
 

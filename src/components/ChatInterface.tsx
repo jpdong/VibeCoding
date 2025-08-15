@@ -4,6 +4,9 @@ import { useCommonContext } from "~/context/common-context";
 import TurnstileWidget, { TurnstileRef } from "~/components/TurnstileWidget";
 import Markdown from "react-markdown";
 import remarkGfm from 'remark-gfm';
+import UsageIndicator from "~/components/usage/UsageIndicator";
+import UsageLimitModal from "~/components/usage/UsageLimitModal";
+import { useRouter } from 'next/navigation';
 
 interface ChatInterfaceProps {
   commonText: any;
@@ -15,9 +18,16 @@ const ChatInterface = ({ commonText }: ChatInterfaceProps) => {
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [showTurnstile, setShowTurnstile] = useState(false);
   const [pendingGeneration, setPendingGeneration] = useState(false);
+  const [showUsageLimitModal, setShowUsageLimitModal] = useState(false);
+  const [usageInfo, setUsageInfo] = useState<any>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [currentUsage, setCurrentUsage] = useState<any>(null);
+  const [usageUpdateKey, setUsageUpdateKey] = useState(0);
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const turnstileRef = useRef<TurnstileRef>(null);
   const textareaRef = useRef<HTMLDivElement>(null);
   const valueRef = useRef(resStr);
+  const router = useRouter();
 
   const {
     setShowLoadingModal,
@@ -53,12 +63,14 @@ const ChatInterface = ({ commonText }: ChatInterfaceProps) => {
       return;
     }
 
+    // Disable button immediately
+    setIsButtonDisabled(true);
+
     // Check if Turnstile verification is needed
     if (!turnstileToken) {
       setPendingGeneration(true);
       setShowTurnstile(true);
-      setToastText(commonText.securityVerificationRequired);
-      setShowToastModal(true);
+      // Don't show toast modal, just show Turnstile
       return;
     }
 
@@ -76,9 +88,11 @@ const ChatInterface = ({ commonText }: ChatInterfaceProps) => {
     setTurnstileToken(null);
     setShowTurnstile(false);
     setPendingGeneration(false);
+    setIsButtonDisabled(false); // Re-enable button after completion
   };
 
   const generateTextStream = async (token: string) => {
+    console.log("generateTextStream:",textStr);
     const requestData = {
       textStr: textStr,
       user_id: userData?.user_id,
@@ -97,6 +111,19 @@ const ChatInterface = ({ commonText }: ChatInterfaceProps) => {
       return;
     }
     if (response.status === 429) {
+      // Check if this is a usage limit error
+      try {
+        const errorData = await response.json();
+        if (errorData.usageInfo) {
+          // This is a usage limit error
+          setUsageInfo(errorData.usageInfo);
+          setShowUsageLimitModal(true);
+          return;
+        }
+      } catch (e) {
+        // Fallback to the original behavior for other 429 errors
+      }
+      
       setToastText("Requested too frequently!");
       setShowToastModal(true);
       return;
@@ -108,34 +135,63 @@ const ChatInterface = ({ commonText }: ChatInterfaceProps) => {
       setTurnstileToken(null);
       setShowTurnstile(true);
       setPendingGeneration(false);
+      setIsButtonDisabled(false); // Re-enable button on verification failure
       return;
     }
     const data = response.body;
     const reader = data.getReader()
     const decoder = new TextDecoder('utf-8')
     let done = false
+    let fullResponse = '' // 收集完整响应
     while (!done) {
       const { value, done: readerDone } = await reader.read();
       if (value) {
-        const char = decoder.decode(value);
-        if (char === '\n' && resStr.endsWith('\n')) {
+        const chunk = decoder.decode(value);
+        
+        // 检查是否是用量更新事件
+        if (chunk.includes('__USAGE_UPDATE__')) {
+          try {
+            const usageStartIndex = chunk.indexOf('__USAGE_UPDATE__');
+            const usageEndIndex = chunk.indexOf('__END_USAGE__');
+            
+            if (usageStartIndex !== -1 && usageEndIndex !== -1) {
+              const usageDataStr = chunk.substring(
+                usageStartIndex + '__USAGE_UPDATE__'.length,
+                usageEndIndex
+              );
+              const usageData = JSON.parse(usageDataStr);
+              
+              if (usageData.type === 'usage_update') {
+                console.log('Received usage update:', usageData.usage);
+                setCurrentUsage(usageData.usage);
+                setUsageUpdateKey(prev => prev + 1); // 触发 UsageIndicator 更新
+              }
+              continue; // 跳过包含用量更新的数据块
+            }
+          } catch (e) {
+            console.log('Error parsing usage update:', e);
+          }
+        }
+        
+        // 处理正常的流内容（排除用量更新数据）
+        if (chunk === '\n' && fullResponse.endsWith('\n')) {
           continue
         }
-        if (char) {
-          setResStr(prevState => prevState + char);
+        if (chunk && !chunk.includes('__USAGE_UPDATE__')) {
+          fullResponse += chunk
+          setResStr(prevState => {
+            const newState = prevState + chunk;
+            return newState;
+          });
           scrollToBottom();
         }
       }
       done = readerDone;
     }
-    // 确保在所有字符都被添加到 resStr 后再调用 saveChatText
-    setResStr(prevState => {
-      // 更新 valueRef.current
-      valueRef.current = prevState;
-      // 保存本次数据
-      saveChatText();
-      return prevState; // 保持 resStr 不变
-    });
+    
+    // 流式响应完成，保存聊天记录
+    console.log('Stream completed, saving chat with response length:', fullResponse.length);
+    await saveChatTextWithContent(textStr, fullResponse);
   }
 
   const handleTurnstileVerify = (token: string) => {
@@ -150,6 +206,9 @@ const ChatInterface = ({ commonText }: ChatInterfaceProps) => {
       setTimeout(() => {
         executeGeneration(token);
       }, 100);
+    } else {
+      // Re-enable button if no pending generation
+      setIsButtonDisabled(false);
     }
   };
 
@@ -159,6 +218,7 @@ const ChatInterface = ({ commonText }: ChatInterfaceProps) => {
     setShowToastModal(true);
     setTurnstileToken(null);
     setPendingGeneration(false);
+    setIsButtonDisabled(false); // Re-enable button on error
   };
 
   const handleTurnstileExpire = () => {
@@ -168,20 +228,64 @@ const ChatInterface = ({ commonText }: ChatInterfaceProps) => {
   };
 
   const saveChatText = async () => {
-    const requestData = {
-      input_text: textStr,
-      output_text: valueRef.current,
-      user_id: userData?.user_id
+    // 防止重复保存
+    if (isSaving || !textStr || !resStr) {
+      return;
     }
-    const response = await fetch(`/api/chat/saveText`, {
-      method: 'POST',
-      body: JSON.stringify(requestData)
-    });
-    const data = await response.json();
-    if (data.skipped) {
-      console.log('内容未保存:', data.reason);
-    } else {
-      console.log('内容已保存到数据库');
+    
+    setIsSaving(true);
+    try {
+      const requestData = {
+        input_text: textStr,
+        output_text: resStr, // 使用当前的resStr而不是valueRef
+        user_id: userData?.user_id
+      }
+      const response = await fetch(`/api/chat/saveText`, {
+        method: 'POST',
+        body: JSON.stringify(requestData)
+      });
+      const data = await response.json();
+      if (data.skipped) {
+        console.log('内容未保存:', data.reason);
+      } else {
+        console.log('内容已保存到数据库');
+      }
+    } catch (error) {
+      console.error('保存聊天记录时出错:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  const saveChatTextWithContent = async (inputText: string, outputText: string) => {
+    // 防止重复保存
+    if (isSaving || !inputText || !outputText) {
+      console.log('Skip saving:', { isSaving, hasInput: !!inputText, hasOutput: !!outputText });
+      return;
+    }
+    
+    setIsSaving(true);
+    try {
+      console.log('Saving chat text:', { inputLength: inputText.length, outputLength: outputText.length });
+      const requestData = {
+        input_text: inputText,
+        output_text: outputText,
+        user_id: userData?.user_id
+      }
+      const response = await fetch(`/api/chat/saveText`, {
+        method: 'POST',
+        body: JSON.stringify(requestData)
+      });
+      const data = await response.json();
+      if (data.skipped) {
+        console.log('内容未保存:', data.reason);
+      } else {
+        console.log('内容已保存到数据库');
+      }
+    } catch (error) {
+      console.error('保存聊天记录时出错:', error);
+    } finally {
+      setIsSaving(false);
     }
   }
 
@@ -227,7 +331,12 @@ const ChatInterface = ({ commonText }: ChatInterfaceProps) => {
               <div className="pt-2">
                 <button
                   onClick={handleGetAnswer}
-                  className="w-full inline-flex justify-center items-center rounded-md button-bg px-3 py-2 text-md font-semibold text-white shadow-sm">
+                  disabled={isButtonDisabled}
+                  className={`w-full inline-flex justify-center items-center rounded-md px-3 py-2 text-md font-semibold shadow-sm transition-all duration-200 ${
+                    isButtonDisabled 
+                      ? 'bg-gray-400 text-gray-300 cursor-not-allowed' 
+                      : 'button-bg text-white hover:opacity-90'
+                  }`}>
                   {commonText.getAnswerText}
                 </button>
               </div>
@@ -282,6 +391,36 @@ const ChatInterface = ({ commonText }: ChatInterfaceProps) => {
           </div>
         </div>
       </div>
+
+      {/* Usage Indicator */}
+      <div className="w-[90%] mx-auto mt-4">
+        <UsageIndicator
+            key={usageUpdateKey} // 使用专门的更新键，而不是resStr长度
+            externalUsage={currentUsage} // 传入当前用量数据
+            onUpgradeClick={() => {
+              if (!userData) {
+                setShowLoginModal(true);
+              } else {
+                window.dispatchEvent(new CustomEvent('openPricingModal'));
+              }
+            }}
+        />
+      </div>
+
+      {/* Usage Limit Modal */}
+      <UsageLimitModal
+        isOpen={showUsageLimitModal}
+        onClose={() => setShowUsageLimitModal(false)}
+        userType={usageInfo?.userType || 'guest'}
+        onSignIn={() => {
+          setShowUsageLimitModal(false);
+          setShowLoginModal(true);
+        }}
+        onUpgrade={() => {
+          setShowUsageLimitModal(false);
+          router.push('/#pricing');
+        }}
+      />
     </>
   );
 };
