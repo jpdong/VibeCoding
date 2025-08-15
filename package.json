@@ -25,6 +25,7 @@
     "dayjs": "^1.11.11",
     "devtools-detector": "^2.0.17",
     "dotenv": "^17.2.1",
+    "framer-motion": "^11.0.0",
     "google-auth-library": "^9.10.0",
     "gray-matter": "^4.0.3",
     "moment": "^2.30.1",

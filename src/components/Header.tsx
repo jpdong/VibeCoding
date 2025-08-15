@@ -1,5 +1,5 @@
 'use client'
-import {useState} from 'react'
+import {useState, useEffect} from 'react'
 import {Dialog} from '@headlessui/react'
 import {Bars3Icon, XMarkIcon} from '@heroicons/react/24/outline'
 import {GlobeAltIcon} from '@heroicons/react/24/outline'
@@ -16,6 +16,7 @@ import LogoutModal from "./LogoutModal";
 import {getLinkHref} from "~/utils/buildLink";
 import ToastModal from "~/components/ToastModal";
 import OneTapComponent from "~/components/OneTapComponent";
+import PricingModal from "./pricing/PricingModal";
 
 export default function Header({
                                  locale,
@@ -23,9 +24,21 @@ export default function Header({
                                  languageList = languages
                                }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [pricingModalOpen, setPricingModalOpen] = useState(false)
   const {setShowLoadingModal, userData, commonText, authText, menuText} = useCommonContext();
 
   const [pageResult] = useState(getLinkHref(locale, page))
+
+  useEffect(() => {
+    const handleOpenPricingModal = () => {
+      setPricingModalOpen(true);
+    };
+
+    window.addEventListener('openPricingModal', handleOpenPricingModal);
+    return () => {
+      window.removeEventListener('openPricingModal', handleOpenPricingModal);
+    };
+  }, []);
 
   const checkLocalAndLoading = (lang) => {
     setMobileMenuOpen(false);
@@ -115,6 +128,11 @@ export default function Header({
             className={`text-sm font-semibold leading-6 header-link ${page.indexOf('blog') != -1 ? 'header-choose-color': ''}`}>
             {locale === 'zh' ? '博客' : 'Blog'}
           </Link>
+          <button
+            onClick={() => setPricingModalOpen(true)}
+            className="text-sm font-semibold leading-6 header-link">
+            {locale === 'zh' ? '价格' : 'Price'}
+          </button>
           {
             process.env.NEXT_PUBLIC_DISCOVER_OPEN != '0' ?
               <Link
@@ -231,6 +249,14 @@ export default function Header({
                   className={`block rounded-lg px-3 py-2 text-base font-semibold leading-7 header-link ${page.indexOf('blog') != -1 ? 'header-choose-color': ''}`}>
                   {locale === 'zh' ? '博客' : 'Blog'}
                 </Link>
+                <button
+                  onClick={() => {
+                    setPricingModalOpen(true);
+                    setMobileMenuOpen(false);
+                  }}
+                  className="block rounded-lg px-3 py-2 text-base font-semibold leading-7 header-link text-left w-full">
+                  {locale === 'zh' ? '价格' : 'Price'}
+                </button>
                 {
                   process.env.NEXT_PUBLIC_DISCOVER_OPEN != '0' ?
                     <Link
@@ -314,6 +340,12 @@ export default function Header({
           </div>
         </Dialog.Panel>
       </Dialog>
+      
+      {/* Pricing Modal */}
+      <PricingModal 
+        isOpen={pricingModalOpen}
+        onClose={() => setPricingModalOpen(false)}
+      />
     </header>
   )
 }

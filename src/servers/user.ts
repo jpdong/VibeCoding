@@ -41,6 +41,8 @@ export const getUserById = async (user_id) => {
       name: user.name,
       email: user.email,
       image: user.image,
+      current_plan: user.current_plan || 'free',
+      subscription_status: user.subscription_status || 'active',
       status: 1
     }
   }
@@ -49,6 +51,8 @@ export const getUserById = async (user_id) => {
     name: '',
     email: '',
     image: '',
+    current_plan: 'free',
+    subscription_status: 'active',
     status: 0
   }
 }
@@ -63,6 +67,8 @@ export const getUserByEmail = async (email) => {
       name: user.name,
       email: email,
       image: user.image,
+      current_plan: user.current_plan || 'free',
+      subscription_status: user.subscription_status || 'active',
       status: 1
     }
   }
@@ -71,6 +77,8 @@ export const getUserByEmail = async (email) => {
     name: '',
     email: email,
     image: '',
+    current_plan: 'free',
+    subscription_status: 'active',
     status: 0
   }
 }

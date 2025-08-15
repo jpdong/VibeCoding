@@ -8,7 +8,9 @@ create table user_info
     name          varchar,
     email         varchar,
     image         varchar,
-    last_login_ip varchar
+    last_login_ip varchar,
+    current_plan  varchar default 'free' not null,
+    subscription_status varchar(20) default 'active' not null
 );
 
 comment on table user_info is 'user info table';
@@ -28,3 +30,7 @@ comment on column user_info.email is 'user email';
 comment on column user_info.image is 'user avatar path';
 
 comment on column user_info.last_login_ip is 'user last login ip';
+
+comment on column user_info.current_plan is 'current subscription plan: free/premium';
+
+comment on column user_info.subscription_status is 'subscription status: active/cancelled/expired';
