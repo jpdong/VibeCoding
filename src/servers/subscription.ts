@@ -127,7 +127,7 @@ export const updateSubscriptionStatus = async (
   
   if (periodStart && periodEnd) {
     query += `, current_period_start = $3, current_period_end = $4`;
-    params.push(periodStart, periodEnd);
+    params.push(periodStart.toISOString(), periodEnd.toISOString());
   }
   
   query += ` WHERE creem_subscription_id = $${params.length}`;

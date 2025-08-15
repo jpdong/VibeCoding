@@ -29,7 +29,7 @@ export default function PricingSection() {
     if (session?.user) {
       fetchUserSubscription();
     }
-  }, [session]);
+  }, [session]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchPlans = async () => {
     try {
@@ -54,10 +54,10 @@ export default function PricingSection() {
   };
 
   const fetchUserSubscription = async () => {
-    if (!session?.user?.id) return;
+    if (!session?.user?.email) return;
     
     try {
-      const response = await fetch(`/api/subscription/status?userId=${session.user.id}`);
+      const response = await fetch(`/api/subscription/status?userEmail=${session.user.email}`);
       const result = await response.json();
       
       if (result.success) {
@@ -111,7 +111,7 @@ export default function PricingSection() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: session.user.id,
+          userEmail: session.user.email,
           planId,
           successUrl: window.location.origin + '/payment/success',
           cancelUrl: window.location.origin + '/payment/cancel'
@@ -151,7 +151,7 @@ export default function PricingSection() {
             Simple, transparent pricing
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Choose the plan that's right for you. Start free, upgrade when you need more power.
+            Choose the plan that&apos;s right for you. Start free, upgrade when you need more power.
           </p>
         </motion.div>
 

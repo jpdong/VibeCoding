@@ -150,7 +150,7 @@ export default function UsageLimitModal({
                       className="bg-gray-50 rounded-xl p-4 mb-6"
                     >
                       <h4 className="font-semibold text-gray-900 mb-3 text-left">
-                        What you'll get:
+                        What you&apos;ll get:
                       </h4>
                       <ul className="space-y-2 text-left">
                         {content.benefits.map((benefit, index) => (

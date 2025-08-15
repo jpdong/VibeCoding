@@ -32,7 +32,7 @@ export default function UsageIndicator({ onUpgradeClick, className = '', externa
     } else {
       fetchUsage();
     }
-  }, [session, externalUsage]);
+  }, [session, externalUsage]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchUsage = async () => {
     try {
