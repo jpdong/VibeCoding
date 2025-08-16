@@ -79,8 +79,6 @@ export default function PricingSection() {
       return [
         ...baseFeatures,
         'Priority support',
-        'Advanced debugging tools',
-        'Custom code templates',
         'Export code history',
         'Priority processing'
       ];
