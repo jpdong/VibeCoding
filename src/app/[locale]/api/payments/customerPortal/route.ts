@@ -10,7 +10,7 @@
 import { Creem } from "creem";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "~/lib/auth";
+import { authOptions } from "~/lib/auth-config";
 import { getUserSubscription } from "~/servers/subscription";
 
 /**
