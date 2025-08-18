@@ -61,7 +61,7 @@ export default function SettingsPageComponent() {
 
   const fetchSubscriptionData = async () => {
     try {
-      const userId = session?.user?.id || session?.user?.user_id;
+      const userId = session?.user?.user_id;
       const apiUrl = userId 
         ? `/api/subscription/status?userId=${userId}`
         : '/api/subscription/status';
@@ -453,12 +453,12 @@ export default function SettingsPageComponent() {
                     </div>
                     <div className="text-center p-4 rounded-lg bg-blue-50">
                       <h4 className="font-semibold text-gray-900">Free</h4>
-                      <p className="text-2xl font-bold text-blue-600">30</p>
+                      <p className="text-2xl font-bold text-blue-600">20</p>
                       <p className="text-sm text-gray-500">generations/day</p>
                     </div>
                     <div className="text-center p-4 rounded-lg bg-green-50">
                       <h4 className="font-semibold text-gray-900">Premium</h4>
-                      <p className="text-2xl font-bold text-green-600">300</p>
+                      <p className="text-2xl font-bold text-green-600">50</p>
                       <p className="text-sm text-gray-500">generations/day</p>
                     </div>
                   </div>

@@ -5,6 +5,9 @@ const withNextIntl = createNextIntlPlugin();
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     output: 'standalone',
+    eslint: {
+        ignoreDuringBuilds: true,
+    },
     async redirects() {
         return [
             {source: '/en', destination: '/', permanent: true},

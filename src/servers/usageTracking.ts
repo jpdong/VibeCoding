@@ -10,8 +10,8 @@ export interface UsageLimit {
 
 const DAILY_LIMITS: UsageLimit = {
   guest: 10,
-  free: 30,
-  premium: 300
+  free: 20,
+  premium: 50
 };
 
 export type UserType = 'guest' | 'free' | 'premium';

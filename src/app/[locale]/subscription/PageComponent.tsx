@@ -39,14 +39,14 @@ export default function SubscriptionPageComponent() {
       return;
     }
 
-    if (session?.user?.id) {
+    if (session?.user?.user_id) {
       fetchSubscriptionData();
     }
   }, [session, status, router]);
 
   const fetchSubscriptionData = async () => {
     try {
-      const response = await fetch(`/api/subscription/status?userId=${session?.user?.id}`);
+      const response = await fetch(`/api/subscription/status?userId=${session?.user?.user_id}`);
       const result = await response.json();
       
       if (result.success) {
@@ -179,7 +179,7 @@ export default function SubscriptionPageComponent() {
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-gray-900">
-                    {subscriptionData?.usage.dailyLimit || 30}
+                    {subscriptionData?.usage.dailyLimit || 20}
                   </p>
                   <p className="text-gray-600">Daily Limit</p>
                 </div>
@@ -190,7 +190,7 @@ export default function SubscriptionPageComponent() {
                 <div className="flex justify-between text-sm text-gray-600 mb-1">
                   <span>Usage Progress</span>
                   <span>
-                    {subscriptionData?.usage.dailyUsage || 0} / {subscriptionData?.usage.dailyLimit || 30}
+                    {subscriptionData?.usage.dailyUsage || 0} / {subscriptionData?.usage.dailyLimit || 20}
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
@@ -198,7 +198,7 @@ export default function SubscriptionPageComponent() {
                     className="bg-blue-600 h-2 rounded-full"
                     style={{
                       width: `${Math.min(
-                        ((subscriptionData?.usage.dailyUsage || 0) / (subscriptionData?.usage.dailyLimit || 30)) * 100,
+                        ((subscriptionData?.usage.dailyUsage || 0) / (subscriptionData?.usage.dailyLimit || 20)) * 100,
                         100
                       )}%`
                     }}
@@ -260,7 +260,7 @@ export default function SubscriptionPageComponent() {
               <div className="border border-dashed border-gray-300 rounded-lg p-6 text-center">
                 <h2 className="text-lg font-semibold text-gray-900 mb-2">No Active Subscription</h2>
                 <p className="text-gray-600 mb-4">
-                  You're currently on the free plan. Upgrade to Premium for more features!
+                  You&apos;re currently on the free plan. Upgrade to Premium for more features!
                 </p>
               </div>
             )}

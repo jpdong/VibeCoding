@@ -34,6 +34,8 @@ export const CommonProvider = ({
         name: session?.user?.name,
         email: session?.user?.email,
         image: session?.user?.image,
+        current_plan: session?.user?.current_plan,
+        subscription_status: session?.user?.subscription_status,
       }
       setUserData(userData);
       setShowLoginModal(false);

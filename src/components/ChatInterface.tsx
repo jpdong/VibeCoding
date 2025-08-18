@@ -6,6 +6,8 @@ import Markdown from "react-markdown";
 import remarkGfm from 'remark-gfm';
 import UsageIndicator from "~/components/usage/UsageIndicator";
 import UsageLimitModal from "~/components/usage/UsageLimitModal";
+import ModelSelector from "~/components/ModelSelector";
+import { getDefaultModel } from "~/configs/modelConfig";
 import { useRouter } from 'next/navigation';
 
 interface ChatInterfaceProps {
@@ -24,6 +26,7 @@ const ChatInterface = ({ commonText }: ChatInterfaceProps) => {
   const [currentUsage, setCurrentUsage] = useState<any>(null);
   const [usageUpdateKey, setUsageUpdateKey] = useState(0);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+  const [selectedModelId, setSelectedModelId] = useState(getDefaultModel().id);
   const turnstileRef = useRef<TurnstileRef>(null);
   const textareaRef = useRef<HTMLDivElement>(null);
   const valueRef = useRef(resStr);
@@ -43,7 +46,20 @@ const ChatInterface = ({ commonText }: ChatInterfaceProps) => {
 
   useEffect(() => {
     getLocalStorage();
+    getSelectedModel();
   }, []);
+
+  const getSelectedModel = () => {
+    const savedModelId = localStorage.getItem('selectedModelId');
+    if (savedModelId) {
+      setSelectedModelId(savedModelId);
+    }
+  };
+
+  const handleModelChange = (modelId: string) => {
+    setSelectedModelId(modelId);
+    localStorage.setItem('selectedModelId', modelId);
+  };
 
   // Removed client-side verification to avoid token invalidation
   // The server will handle all Turnstile verification
@@ -96,7 +112,8 @@ const ChatInterface = ({ commonText }: ChatInterfaceProps) => {
     const requestData = {
       textStr: textStr,
       user_id: userData?.user_id,
-      turnstileToken: token
+      turnstileToken: token,
+      modelId: selectedModelId
     }
     setShowLoadingModal(true);
     const response = await fetch(`/api/chat/generateTextStream`, {
@@ -129,6 +146,20 @@ const ChatInterface = ({ commonText }: ChatInterfaceProps) => {
       return;
     }
     if (response.status === 403) {
+      // Check if this is a premium model access error
+      try {
+        const errorData = await response.json();
+        if (errorData.requiresUpgrade && errorData.modelId) {
+          // This is a premium model access error
+          setToastText("Premium model access requires subscription upgrade.");
+          setShowToastModal(true);
+          setIsButtonDisabled(false);
+          return;
+        }
+      } catch (e) {
+        // Fallback to security verification error
+      }
+      
       setToastText(commonText.securityVerificationFailed);
       setShowToastModal(true);
       turnstileRef.current?.reset();
@@ -327,6 +358,15 @@ const ChatInterface = ({ commonText }: ChatInterfaceProps) => {
             ></textarea>
           </div>
           <div className="inset-x-px bottom-1 bg-white">
+            {/* Model Selector */}
+            <div className="border-t border-gray-200 px-4 py-3">
+              <ModelSelector
+                selectedModelId={selectedModelId}
+                onModelChange={handleModelChange}
+                userType={currentUsage?.userType || (userData?.current_plan === 'premium' && userData?.subscription_status === 'active') ? 'premium' : userData ? 'free' : 'guest'}
+                className="w-full"
+              />
+            </div>
             <div className="flex justify-center items-center space-x-3 border-t border-gray-200 px-2 py-2">
               <div className="pt-2">
                 <button

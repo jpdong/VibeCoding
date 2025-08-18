@@ -10,7 +10,7 @@
 import { Creem } from "creem";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "~/libs/auth";
+import { authOptions } from "~/lib/auth";
 import { getUserSubscription } from "~/servers/subscription";
 
 /**
@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
   try {
     // Check user authentication
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    if (!session?.user?.user_id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
 
     // If no customer_id provided, try to get it from user's subscription
     if (!customerId) {
-      const subscription = await getUserSubscription(session.user.id);
+      const subscription = await getUserSubscription(session.user.user_id);
       if (!subscription?.creemSubscriptionId) {
         return NextResponse.json(
           { error: "No active subscription found" },

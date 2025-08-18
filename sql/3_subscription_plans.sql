@@ -26,6 +26,6 @@ comment on column subscription_plans.is_active is '是否激活';
 
 -- 插入默认计划
 insert into subscription_plans (plan_id, name, price, daily_limit, features) values
-('free', 'Free', 0.00, 30, '{"support": "community", "priority": "normal"}'),
-('premium', 'Premium', 9.99, 300, '{"support": "priority", "priority": "high", "advanced_features": true}')
+('free', 'Free', 0.00, 20, '{"support": "community", "priority": "normal"}'),
+('premium', 'Premium', 9.99, 50, '{"support": "priority", "priority": "high", "advanced_features": true}')
 on conflict (plan_id) do nothing;
