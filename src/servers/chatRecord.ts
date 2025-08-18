@@ -11,9 +11,9 @@ export const saveChatText = async (json) => {
   const user_id = json.user_id;
   
   // 检查生成内容长度，如果小于600字则不写入数据库
-  if (!output_text || output_text.length < 600) {
-    console.log('生成内容为空或小于600字，跳过数据库写入');
-    return { ...json, skipped: true, reason: '内容长度不足600字' };
+  if (!output_text || output_text.length < 1000) {
+    console.log('生成内容为空或小于1000字，跳过数据库写入');
+    return { ...json, skipped: true, reason: '内容长度不足1000字' };
   }
   
   const language = await getLanguage(input_text.substring(0, 64));

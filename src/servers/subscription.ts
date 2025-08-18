@@ -111,6 +111,34 @@ export const createUserSubscription = async (
 };
 
 /**
+ * 根据Creem订阅ID获取用户订阅
+ */
+export const getUserSubscriptionByCreemId = async (creemSubscriptionId: string): Promise<UserSubscription | null> => {
+  const result = await db.query(`
+    SELECT id, user_id, plan_id, status, current_period_start, current_period_end,
+           cancel_at_period_end, creem_subscription_id
+    FROM user_subscriptions
+    WHERE creem_subscription_id = $1
+    ORDER BY created_at DESC
+    LIMIT 1
+  `, [creemSubscriptionId]);
+  
+  if (result.rows.length === 0) return null;
+  
+  const row = result.rows[0];
+  return {
+    id: row.id,
+    userId: row.user_id,
+    planId: row.plan_id,
+    status: row.status,
+    currentPeriodStart: row.current_period_start,
+    currentPeriodEnd: row.current_period_end,
+    cancelAtPeriodEnd: row.cancel_at_period_end,
+    creemSubscriptionId: row.creem_subscription_id
+  };
+};
+
+/**
  * 更新订阅状态
  */
 export const updateSubscriptionStatus = async (

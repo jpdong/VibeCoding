@@ -202,7 +202,7 @@ export default function Header({
         {
           process.env.NEXT_PUBLIC_CHECK_GOOGLE_LOGIN != '0' ?
             <div className="hidden ltr:lg:ml-2 rtl:lg:mr-2 lg:relative lg:inline-block lg:text-left">
-              <LoginButton buttonType={userData.email ? 1 : 0} loginText={authText.loginText}/>
+              <LoginButton buttonType={userData.email ? 1 : 0} loginText={authText.loginText} locale={locale}/>
             </div>
             :
             null
@@ -331,7 +331,7 @@ export default function Header({
                 process.env.NEXT_PUBLIC_CHECK_GOOGLE_LOGIN != '0' ?
                   <div
                     className="relative inline-block text-left text-base font-semibold ltr:ml-2 rtl:mr-2">
-                    <LoginButton buttonType={userData.email ? 1 : 0} loginText={authText.loginText}/>
+                    <LoginButton buttonType={userData.email ? 1 : 0} loginText={authText.loginText} locale={locale}/>
                   </div>
                   :
                   null

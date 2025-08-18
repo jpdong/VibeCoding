@@ -1,6 +1,7 @@
 import {parseOpenAIStream} from "~/utils/openai-handle";
 import {parseOpenAIStreamWithUsage} from "~/utils/openai-handle-with-usage";
 import {apiKey, baseUrl, model, temperature} from "~/configs/openaiConfig";
+import {getModelById, getDefaultModel} from "~/configs/modelConfig";
 import {getUserById} from "~/servers/user";
 import {getDb} from "~/libs/db";
 import {canUserUseService, incrementUsage} from "~/servers/usageTracking";
@@ -42,12 +43,34 @@ export async function POST(req: Request, res: Response) {
   const textStr = json.textStr;
   const user_id = json.user_id;
   const turnstileToken = json.turnstileToken;
+  const modelId = json.modelId;
   console.log('textStr===>', textStr);
+  console.log('modelId===>', modelId);
 
   // Get client IP for guest users
   const clientIP = req.headers.get('x-forwarded-for') || 
                    req.headers.get('x-real-ip') || 
                    'unknown';
+
+  // Get selected model configuration
+  const selectedModel = getModelById(modelId) || getDefaultModel();
+  console.log('Selected model:', selectedModel);
+
+  // Check if user can access premium models
+  const { canUse, usageInfo } = await canUserUseService(user_id, clientIP);
+  const userType = usageInfo.userType;
+  
+  if (selectedModel.isPremium && userType !== 'premium') {
+    return new Response(JSON.stringify({
+      error: "Premium model access requires subscription upgrade.",
+      requiresUpgrade: true,
+      modelId: selectedModel.id
+    }), {
+      status: 403,
+      statusText: "Premium model access denied",
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
 
   // Verify Turnstile token
   if (turnstileToken) {
@@ -65,9 +88,7 @@ export async function POST(req: Request, res: Response) {
     });
   }
 
-  // Check usage limits first
-  const { canUse, usageInfo } = await canUserUseService(user_id, clientIP);
-  
+  // Check usage limits
   if (!canUse) {
     const errorMessage = user_id 
       ? `Daily limit reached. You've used ${usageInfo.used}/${usageInfo.limit} generations today.`
@@ -119,17 +140,19 @@ export async function POST(req: Request, res: Response) {
         content: textStr
       }
     ],
-    model: model,
-    temperature: temperature,
+    model: selectedModel.name,
+    temperature: selectedModel.temperature,
     stream: true
   }
+  const apiEndpoint = process.env.OPENAI_API_BASE_URL;
+  const modelApiKey = process.env.OPENAI_API_KEY
 
-  const response = await fetch(`${baseUrl}/v1/chat/completions`, {
+  const response = await fetch(`${apiEndpoint}/v1/chat/completions`, {
     method: 'POST',
     body: JSON.stringify(body),
     headers: {
       "Content-Type": 'application/json',
-      "authorization": `Bearer ${apiKey}`
+      "authorization": `Bearer ${modelApiKey}`
     }
   });
 
