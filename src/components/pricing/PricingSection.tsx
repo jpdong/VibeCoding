@@ -23,7 +23,7 @@ export default function PricingSection() {
   const router = useRouter();
   const { setShowLoginModal } = useCommonContext();
   const [plans, setPlans] = useState<PricingPlan[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [currentPlan, setCurrentPlan] = useState<string>('free');
 
   useEffect(() => {
@@ -104,7 +104,7 @@ export default function PricingSection() {
       return; // 免费计划无需操作
     }
 
-    setLoading(true);
+    setLoadingPlan(planId);
     
     try {
       // 对于Premium计划，使用环境配置的产品ID
@@ -130,7 +130,7 @@ export default function PricingSection() {
       console.error('Error creating checkout:', error);
       alert('Failed to start payment process. Please try again.');
     } finally {
-      setLoading(false);
+      setLoadingPlan(null);
     }
   };
 
@@ -168,7 +168,7 @@ export default function PricingSection() {
               <PricingCard
                 plan={plan}
                 onSelectPlan={handleSelectPlan}
-                loading={loading}
+                loading={loadingPlan === plan.id}
               />
             </motion.div>
           ))}

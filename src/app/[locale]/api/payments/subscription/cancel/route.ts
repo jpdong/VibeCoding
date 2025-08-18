@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Creem } from "creem";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
+import { cancelSubscription } from "@/servers/subscription";
 
 /**
  * Initialize Creem SDK client
@@ -60,6 +61,16 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    // First update the local database to mark subscription for cancellation at period end
+    const updated = await cancelSubscription(session.user.user_id);
+    
+    if (!updated) {
+      return NextResponse.json(
+        { error: "No active subscription found" },
+        { status: 404 }
+      );
+    }
+
     // Call Creem SDK to cancel the subscription
     // This will prevent renewal at the end of the current period
     await creem.cancelSubscription({

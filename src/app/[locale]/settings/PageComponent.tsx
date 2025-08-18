@@ -8,7 +8,8 @@ import {
   UserIcon, 
   BellIcon, 
   ChartBarIcon,
-  Cog6ToothIcon 
+  Cog6ToothIcon,
+  ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
 
 interface SubscriptionData {
@@ -37,30 +38,41 @@ export default function SettingsPageComponent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [subscriptionData, setSubscriptionData] = useState<SubscriptionData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('subscription');
+  const [cancelLoading, setCancelLoading] = useState(false);
 
   useEffect(() => {
+    if (status === 'loading') {
+      return;
+    }
+    
     if (status === 'unauthenticated') {
       router.push('/');
       return;
     }
 
-    if (session?.user?.id) {
+    if (status === 'authenticated') {
+      setLoading(true);
       fetchSubscriptionData();
     }
   }, [session, status, router]);
 
   const fetchSubscriptionData = async () => {
     try {
-      const response = await fetch(`/api/subscription/status?userId=${session?.user?.id}`);
+      const userId = session?.user?.id || session?.user?.user_id;
+      const apiUrl = userId 
+        ? `/api/subscription/status?userId=${userId}`
+        : '/api/subscription/status';
+      
+      const response = await fetch(apiUrl);
       const result = await response.json();
       
       if (result.success) {
         setSubscriptionData(result.data);
       } else {
-        setError('Failed to load subscription data');
+        setError(result.error || 'Failed to load subscription data');
       }
     } catch (err) {
       setError('Error loading subscription data');
@@ -90,12 +102,58 @@ export default function SettingsPageComponent() {
     }
   };
 
-  if (loading) {
+  const handleCancelSubscription = async () => {
+    if (!subscriptionData?.subscription?.creemSubscriptionId) {
+      alert('No active subscription found');
+      return;
+    }
+
+    // Check if already scheduled for cancellation
+    if (subscriptionData.subscription.cancelAtPeriodEnd) {
+      alert('Your subscription is already scheduled to be cancelled at the end of the current billing period.');
+      return;
+    }
+
+    const confirmed = window.confirm(
+      '⚠️ Are you sure you want to cancel your subscription?\n\n' +
+      '• You will continue to have Premium access until the end of your current billing period\n' +
+      '• After that, your account will be downgraded to the Free plan\n' +
+      '• You can reactivate your subscription anytime before the period ends\n\n' +
+      'Click OK to confirm cancellation, or Cancel to keep your subscription.'
+    );
+
+    if (confirmed) {
+      setCancelLoading(true);
+      try {
+        const response = await fetch(`/api/payments/subscription/cancel?subscription_id=${subscriptionData.subscription.creemSubscriptionId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          alert('✅ Subscription cancelled successfully!\n\nYou will retain Premium access until the end of your current billing period. After that, your account will automatically switch to the Free plan.');
+          fetchSubscriptionData(); // Refresh data to show updated status
+        } else {
+          const error = await response.json();
+          alert(`❌ Failed to cancel subscription: ${error.error || 'Unknown error'}. Please try again or contact support.`);
+        }
+      } catch (error) {
+        console.error('Error cancelling subscription:', error);
+        alert('❌ Error cancelling subscription. Please check your internet connection and try again.');
+      } finally {
+        setCancelLoading(false);
+      }
+    }
+  };
+
+  if (status === 'loading') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading settings...</p>
+          <p className="mt-4 text-gray-600">Loading session...</p>
         </div>
       </div>
     );
@@ -248,9 +306,19 @@ export default function SettingsPageComponent() {
                       </div>
                       <div>
                         <p className="text-sm text-gray-600">Cancel at Period End</p>
-                        <p className="font-medium">
-                          {subscriptionData.subscription.cancelAtPeriodEnd ? 'Yes' : 'No'}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className={`font-medium ${subscriptionData.subscription.cancelAtPeriodEnd ? 'text-orange-600' : ''}`}>
+                            {subscriptionData.subscription.cancelAtPeriodEnd ? 'Yes' : 'No'}
+                          </p>
+                          {subscriptionData.subscription.cancelAtPeriodEnd && (
+                            <ExclamationTriangleIcon className="h-4 w-4 text-orange-500" />
+                          )}
+                        </div>
+                        {subscriptionData.subscription.cancelAtPeriodEnd && (
+                          <p className="text-xs text-orange-600 mt-1">
+                            Your subscription will end on {formatDate(subscriptionData.subscription.currentPeriodEnd)}
+                          </p>
+                        )}
                       </div>
                       <div>
                         <p className="text-sm text-gray-600">Subscription ID</p>
@@ -279,12 +347,43 @@ export default function SettingsPageComponent() {
                       Upgrade to Premium
                     </button>
                   ) : (
-                    <button
-                      onClick={handleManageSubscription}
-                      className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-medium py-3 px-6 rounded-lg transition-colors"
-                    >
-                      Manage Subscription
-                    </button>
+                    <>
+                      <button
+                        onClick={handleManageSubscription}
+                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors"
+                      >
+                        Manage Subscription
+                      </button>
+                      
+                      {/* Cancel Subscription Button - only show for active subscriptions */}
+                      {subscriptionData?.subscription && !subscriptionData.subscription.cancelAtPeriodEnd && (
+                        <button
+                          onClick={handleCancelSubscription}
+                          disabled={cancelLoading}
+                          className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
+                        >
+                          {cancelLoading ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                              Cancelling...
+                            </>
+                          ) : (
+                            <>
+                              <ExclamationTriangleIcon className="h-5 w-5" />
+                              Cancel Subscription
+                            </>
+                          )}
+                        </button>
+                      )}
+                      
+                      {/* Show cancellation status if subscription is scheduled for cancellation */}
+                      {subscriptionData?.subscription?.cancelAtPeriodEnd && (
+                        <div className="flex-1 bg-orange-100 border border-orange-300 text-orange-800 font-medium py-3 px-6 rounded-lg flex items-center justify-center gap-2">
+                          <ExclamationTriangleIcon className="h-5 w-5" />
+                          Cancelling at period end
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>

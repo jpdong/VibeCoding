@@ -219,15 +219,20 @@ export async function POST(req: NextRequest) {
     }
 
     if (webhook.eventType === "subscription.canceled") {
-      // Update subscription status to handle cancellation
+      // Handle subscription cancellation - keep active until period ends
+      // This event is triggered when user cancels but should maintain access
       try {
-        await updateSubscriptionStatus(
-          webhook.object.id,
-          "canceled"
-        );
-        console.log(`Canceled subscription: ${webhook.object.id}`);
+        // Get existing subscription to check current period end
+        const existingSubscription = await getUserSubscriptionByCreemId(webhook.object.id);
+        if (existingSubscription) {
+          // Instead of setting status to "canceled", we mark it for cancellation at period end
+          // The subscription should remain "active" until the period expires
+          console.log(`Subscription marked for cancellation at period end: ${webhook.object.id}`);
+          // Note: cancel_at_period_end should already be set by our API
+          // We don't change the status here - it remains "active"
+        }
       } catch (error) {
-        console.error("Failed to cancel subscription:", error);
+        console.error("Failed to handle subscription cancellation:", error);
       }
     }
 
