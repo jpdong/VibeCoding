@@ -80,7 +80,7 @@ export default function PaymentCancelPage() {
             transition={{ delay: 0.6 }}
           >
             <Link
-              href="/chat"
+              href="/"
               className="w-full bg-blue-600 text-white py-3 px-6 rounded-xl font-medium hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-2"
             >
               <ArrowLeftIcon className="w-4 h-4" />

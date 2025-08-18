@@ -37,7 +37,12 @@ export async function GET(request: NextRequest) {
       success: true,
       data: {
         subscription,
-        usage: usageInfo,
+        usage: {
+          used: usageInfo.used,
+          limit: usageInfo.limit,
+          remaining: usageInfo.remaining,
+          userType: usageInfo.userType
+        },
         user: user ? {
           currentPlan: user.current_plan || 'free',
           subscriptionStatus: user.subscription_status || 'active'
