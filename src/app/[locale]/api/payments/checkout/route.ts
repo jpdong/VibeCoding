@@ -37,9 +37,7 @@ export interface CheckoutSession {
  * Initialize Creem SDK client
  * Server index 1 is used for test environment
  */
-const creem = new Creem({
-  serverIdx: 1,
-});
+const creem = new Creem();
 
 /**
  * GET /api/checkout
