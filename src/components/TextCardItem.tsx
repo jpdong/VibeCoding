@@ -34,7 +34,7 @@ const TextCardItem = ({
               </div>
               <div className="text-gray-400 text-lg line-clamp-5">
                 <Markdown>
-                  {item.output_text}
+                  {item.output_text?.substring(0, 100)}
                 </Markdown>
               </div>
             </div>
