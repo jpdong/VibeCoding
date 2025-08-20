@@ -10,11 +10,19 @@ export const saveChatText = async (json) => {
   const output_text = json.output_text;
   const user_id = json.user_id;
   
-  // 检查生成内容长度，如果小于600字则不写入数据库
-  if (!output_text || output_text.length < 1000) {
-    console.log('生成内容为空或小于1000字，跳过数据库写入');
-    return { ...json, skipped: true, reason: '内容长度不足1000字' };
+  // 检查生成内容长度，如果小于1500字则不写入数据库
+  if (!output_text || output_text.length < 1500) {
+    console.log('生成内容为空或小于1500字，跳过数据库写入');
+    return { ...json, skipped: true, reason: '内容长度不足1500字' };
   }
+
+  // 随机数判断，只有10%的概率继续后面的流程
+  const randomValue = Math.random();
+  if (randomValue > 0.1) {
+    console.log('随机数检查未通过，跳过数据库写入', { randomValue });
+    return { ...json, skipped: true, reason: '随机数检查未通过' };
+  }
+
   
   const language = await getLanguage(input_text.substring(0, 64));
   let title = await generateTitle(input_text, output_text, language);
