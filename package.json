@@ -21,6 +21,7 @@
     "axios": "^1.6.8",
     "cheerio": "^1.0.0-rc.12",
     "clsx": "^2.1.1",
+    "creem": "^0.3.37",
     "date-fns": "^3.6.0",
     "dayjs": "^1.11.11",
     "devtools-detector": "^2.0.17",

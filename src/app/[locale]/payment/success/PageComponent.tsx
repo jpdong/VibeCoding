@@ -119,7 +119,7 @@ export default function PaymentSuccessPage() {
             transition={{ delay: 0.6 }}
           >
             <Link
-              href="/chat"
+              href="/"
               className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-xl font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-200 flex items-center justify-center gap-2"
             >
               Start Coding Now

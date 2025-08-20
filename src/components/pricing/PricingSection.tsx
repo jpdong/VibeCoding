@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 import PricingCard from './PricingCard';
 import { useRouter } from 'next/navigation';
+import { useCommonContext } from "~/context/common-context";
 
 interface PricingPlan {
   id: string;
@@ -20,8 +21,9 @@ interface PricingPlan {
 export default function PricingSection() {
   const { data: session } = useSession();
   const router = useRouter();
+  const { setShowLoginModal } = useCommonContext();
   const [plans, setPlans] = useState<PricingPlan[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [currentPlan, setCurrentPlan] = useState<string>('free');
 
   useEffect(() => {
@@ -54,13 +56,13 @@ export default function PricingSection() {
   };
 
   const fetchUserSubscription = async () => {
-    if (!session?.user?.email) return;
+    if (!session?.user?.user_id) return;
     
     try {
-      const response = await fetch(`/api/subscription/status?userEmail=${session.user.email}`);
+      const response = await fetch(`/api/subscription/status?userId=${session.user.user_id}`);
       const result = await response.json();
       
-      if (result.success) {
+      if (result.success && result.data.user) {
         setCurrentPlan(result.data.user.currentPlan || 'free');
       }
     } catch (error) {
@@ -93,8 +95,8 @@ export default function PricingSection() {
 
   const handleSelectPlan = async (planId: string) => {
     if (!session?.user) {
-      // 未登录用户，引导登录
-      router.push('/login?callbackUrl=' + encodeURIComponent(window.location.href));
+      // 未登录用户，显示登录模态框
+      setShowLoginModal(true);
       return;
     }
 
@@ -102,32 +104,33 @@ export default function PricingSection() {
       return; // 免费计划无需操作
     }
 
-    setLoading(true);
+    setLoadingPlan(planId);
     
     try {
-      const response = await fetch('/api/payments/create-checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userEmail: session.user.email,
-          planId,
-          successUrl: window.location.origin + '/payment/success',
-          cancelUrl: window.location.origin + '/payment/cancel'
-        })
+      // 对于Premium计划，使用环境配置的产品ID
+      const productId = planId === 'premium' || planId === 'prod_xxx' ? 
+        process.env.NEXT_PUBLIC_CREEM_PRODUCT_ID || 'prod_xxx' : 
+        planId;
+
+      const response = await fetch(`/api/payments/checkout?product_id=${productId}`, {
+        method: 'GET',
+        headers: { 
+          'Content-Type': 'application/json'
+        }
       });
 
       const result = await response.json();
       
       if (result.success) {
-        window.location.href = result.data.checkoutUrl;
+        window.location.href = result.checkoutUrl;
       } else {
-        throw new Error(result.error);
+        throw new Error(result.error || 'Failed to create checkout session');
       }
     } catch (error) {
       console.error('Error creating checkout:', error);
       alert('Failed to start payment process. Please try again.');
     } finally {
-      setLoading(false);
+      setLoadingPlan(null);
     }
   };
 
@@ -165,7 +168,7 @@ export default function PricingSection() {
               <PricingCard
                 plan={plan}
                 onSelectPlan={handleSelectPlan}
-                loading={loading}
+                loading={loadingPlan === plan.id}
               />
             </motion.div>
           ))}

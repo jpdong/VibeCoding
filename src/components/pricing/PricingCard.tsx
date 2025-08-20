@@ -31,7 +31,7 @@ export default function PricingCard({ plan, onSelectPlan, loading = false }: Pri
   const getButtonText = () => {
     if (plan.current) return 'Current Plan';
     if (plan.id === 'free') return 'Get Started';
-    return 'Coming Soon';
+    return 'Upgrade Now';
   };
 
   const getButtonStyle = () => {
@@ -41,8 +41,11 @@ export default function PricingCard({ plan, onSelectPlan, loading = false }: Pri
     if (plan.id === 'free') {
       return 'bg-gray-900 text-white hover:bg-gray-800';
     }
-    // Premium plans (coming soon)
-    return 'bg-gray-300 text-gray-600 cursor-not-allowed';
+    // Premium plans - now clickable
+    if (plan.popular) {
+      return 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl';
+    }
+    return 'bg-blue-600 text-white hover:bg-blue-700';
   };
 
   return (
@@ -119,8 +122,8 @@ export default function PricingCard({ plan, onSelectPlan, loading = false }: Pri
       <motion.button
         whileHover={{ scale: plan.current ? 1 : 1.02 }}
         whileTap={{ scale: plan.current ? 1 : 0.98 }}
-        onClick={() => !plan.current && !loading && plan.id === 'free' && onSelectPlan(plan.id)}
-        disabled={plan.current || loading || plan.id !== 'free'}
+        onClick={() => !plan.current && !loading && onSelectPlan(plan.id)}
+        disabled={plan.current || loading}
         className={`w-full py-3 px-6 rounded-xl font-medium text-sm transition-all duration-200 ${getButtonStyle()}`}
       >
         {loading ? (
